@@ -41,3 +41,6 @@ yarn-error.*
 /ios
 /android
 .agents
+
+dev_docs/
+docs/
