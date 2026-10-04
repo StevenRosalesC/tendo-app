@@ -1,4 +1,4 @@
-import { useSignUp, useSSO } from "@clerk/expo";
+import { useClerk, useSignUp, useSSO } from "@clerk/expo";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
 import { useState } from "react";
@@ -20,22 +20,72 @@ import Input from "../../../components/ui/Input";
 import AuthFooter from "../../../components/auth/AuthFooter";
 import AuthHeader from "../../../components/auth/AuthHeader";
 import SocialAuthButton from "../../../components/auth/SocialAuthButton";
+import tendoApi from "../../../services/api";
+import useAuthStore from "../../../stores/useAuthStore";
 
 export default function RegisterScreen() {
   const router = useRouter();
   const { signUp, errors, fetchStatus } = useSignUp();
   const { startSSOFlow } = useSSO();
+  const clerk = useClerk();
+  const { setUser } = useAuthStore();
 
   // Local state
   const [name, setName] = useState<string>("");
+  const [storeName, setStoreName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [verificationCode, setVerificationCode] = useState<string>("");
   const [pendingVerification, setPendingVerification] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
+  const [loadingStep, setLoadingStep] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [resendCooldown, setResendCooldown] = useState<boolean>(false);
+
+  // Helper to provision B2B Organization & JIT backend user
+  const handleProvisioningAndNavigate = async () => {
+    try {
+      setLoading(true);
+      setLoadingStep("Activando sesión de operador...");
+
+      if (signUp?.createdSessionId) {
+        await clerk.setActive({ session: signUp.createdSessionId });
+      }
+
+      setLoadingStep("Configurando tienda y organización B2B...");
+
+      const organizationName = storeName.trim() || `${name.trim()}'s Store`;
+      try {
+        const org = await clerk.createOrganization({ name: organizationName });
+        await clerk.setActive({ organization: org.id });
+      } catch (orgErr: any) {
+        console.warn("Organization creation note:", orgErr?.message || orgErr);
+      }
+
+      setLoadingStep("Sincronizando con base de datos Tendo JIT...");
+
+      const token = await clerk.session?.getToken();
+      if (token) {
+        try {
+          const profile = await tendoApi.getProfile(token);
+          setUser(profile);
+        } catch (apiErr: any) {
+          console.warn("Backend JIT profile fetch note:", apiErr?.message || apiErr);
+        }
+      }
+
+      router.replace("/home");
+    } catch (err: any) {
+      console.error("Provisioning error:", err);
+      setErrorMessage(
+        err?.message || "Error en el aprovisionamiento de la tienda.",
+      );
+    } finally {
+      setLoading(false);
+      setLoadingStep("");
+    }
+  };
 
   // Handle Google SSO / Workspace
   const handleGoogleSignUp = async () => {
@@ -45,6 +95,27 @@ export default function RegisterScreen() {
       const result = await startSSOFlow({ strategy: "oauth_google" });
       if (result.createdSessionId) {
         await result.setActive?.({ session: result.createdSessionId });
+
+        if (!clerk.organization) {
+          const organizationName = storeName.trim() || "Tienda Principal";
+          try {
+            const org = await clerk.createOrganization({ name: organizationName });
+            await clerk.setActive({ organization: org.id });
+          } catch (orgErr: any) {
+            console.warn("SSO Org creation note:", orgErr?.message || orgErr);
+          }
+        }
+
+        const token = await clerk.session?.getToken();
+        if (token) {
+          try {
+            const profile = await tendoApi.getProfile(token);
+            setUser(profile);
+          } catch (apiErr: any) {
+            console.warn("Backend JIT profile fetch note:", apiErr?.message || apiErr);
+          }
+        }
+
         router.replace("/home");
       }
     } catch (err: any) {
@@ -61,6 +132,10 @@ export default function RegisterScreen() {
   const handleRegisterSubmit = async () => {
     if (!name.trim()) {
       setErrorMessage("Por favor ingresa tu nombre completo o de operador.");
+      return;
+    }
+    if (!storeName.trim()) {
+      setErrorMessage("Por favor ingresa el nombre de tu tienda o negocio.");
       return;
     }
     if (!email.trim()) {
@@ -107,12 +182,7 @@ export default function RegisterScreen() {
         await signUp.verifications.sendEmailCode();
         setPendingVerification(true);
       } else if (signUp.status === "complete") {
-        await signUp.finalize({
-          navigate: ({ decorateUrl }) => {
-            const url = decorateUrl("/home");
-            router.replace(url as any);
-          },
-        });
+        await handleProvisioningAndNavigate();
       }
     } catch (err: any) {
       console.error("SignUp error:", err);
@@ -150,12 +220,7 @@ export default function RegisterScreen() {
       }
 
       if (signUp.status === "complete") {
-        await signUp.finalize({
-          navigate: ({ decorateUrl }) => {
-            const url = decorateUrl("/home");
-            router.replace(url as any);
-          },
-        });
+        await handleProvisioningAndNavigate();
       } else {
         setErrorMessage(`Estado adicional requerido: ${signUp.status}`);
       }
@@ -396,6 +461,16 @@ export default function RegisterScreen() {
                           autoCapitalize="words"
                         />
 
+                        {/* Store / Business Name Input */}
+                        <Input
+                          label="Nombre de la Tienda / Negocio"
+                          iconName="store"
+                          value={storeName}
+                          onChangeText={setStoreName}
+                          placeholder="Ej. Supermercado Condesa"
+                          autoCapitalize="words"
+                        />
+
                         {/* Email Input */}
                         <Input
                           label="Correo corporativo"
@@ -419,7 +494,7 @@ export default function RegisterScreen() {
 
                         {/* Submit Button */}
                         <Button
-                          label="Crear Cuenta de Operador"
+                          label={loadingStep || "Crear Cuenta y Tienda"}
                           rightIcon={
                             <MaterialIcons
                               name="arrow-forward"
@@ -449,7 +524,7 @@ export default function RegisterScreen() {
 
                         {/* Submit Verification Code */}
                         <Button
-                          label="Verificar y Activar Terminal"
+                          label={loadingStep || "Verificar y Activar Terminal"}
                           rightIcon={
                             <MaterialIcons
                               name="check-circle"
