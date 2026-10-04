@@ -48,7 +48,7 @@ export default function Navigation() {
               activeOpacity={0.7}
               onPress={() => {
                 if (!isActive) {
-                  router.push(item.route as any);
+                  router.replace(item.route as any);
                 }
               }}
               className="flex-col items-center justify-center min-w-[56px] min-h-[44px] gap-0.5 px-2 py-1 rounded-xl"
