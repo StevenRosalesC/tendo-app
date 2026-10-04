@@ -145,7 +145,7 @@ export function TableRow({
   interactive = false,
   ...props
 }: TableRowProps) {
-  const baseClasses = `flex-row items-center py-3 px-4 border-b border-surface-container-high/30 transition-colors ${
+  const baseClasses = `flex-row items-center py-3 px-4 border-b border-surface-container-high/30 ${
     isHeader
       ? "bg-surface-container border-b border-surface-container-high/60"
       : isSelected
