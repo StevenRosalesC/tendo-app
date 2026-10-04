@@ -47,6 +47,13 @@ module.exports = {
           DEFAULT: "#c3c0ff",
           container: "#3626ce",
         },
+        error: {
+          DEFAULT: "#ffb4ab",
+          container: "#93000a",
+        },
+        "on-error": "#690005",
+        "on-error-container": "#ffdad6",
+        "surface-bright": "#39393b",
         "on-surface": "#e5e1e4",
         "on-surface-variant": "#c7c4d7",
         "tertiary-container": "#77767e",
