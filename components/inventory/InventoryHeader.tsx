@@ -1,5 +1,5 @@
 import { MaterialIcons } from "@expo/vector-icons";
-import { Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 
 export interface InventoryHeaderProps {
   totalProducts?: number;
@@ -7,14 +7,18 @@ export interface InventoryHeaderProps {
   onNewProduct?: () => void;
   onQuickAdjust?: () => void;
   onImportExport?: () => void;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
 }
 
 export default function InventoryHeader({
-  totalProducts = 145,
-  totalCategories = 4,
+  totalProducts = 0,
+  totalCategories,
   onNewProduct,
   onQuickAdjust,
   onImportExport,
+  onRefresh,
+  isRefreshing = false,
 }: InventoryHeaderProps) {
   return (
     <View className="flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -29,11 +33,13 @@ export default function InventoryHeader({
               {totalProducts} Productos Totales
             </Text>
           </View>
-          <View className="px-2.5 py-0.5 rounded-full bg-surface-container-high">
-            <Text className="text-xs font-medium text-on-surface-variant">
-              {totalCategories} Categorías
-            </Text>
-          </View>
+          {totalCategories !== undefined && (
+            <View className="px-2.5 py-0.5 rounded-full bg-surface-container-high">
+              <Text className="text-xs font-medium text-on-surface-variant">
+                {totalCategories} Categorías
+              </Text>
+            </View>
+          )}
         </View>
         <Text className="text-xs sm:text-sm text-on-surface-variant">
           Gestión centralizada de stock multicanal, márgenes operativos y sincronización en mostrador
@@ -56,6 +62,25 @@ export default function InventoryHeader({
             <Text className="text-xs text-on-surface-variant">ML</Text>
           </View>
         </View>
+
+        {/* Refresh Button */}
+        {onRefresh && (
+          <TouchableOpacity
+            onPress={onRefresh}
+            disabled={isRefreshing}
+            activeOpacity={0.8}
+            className="h-10 px-3.5 rounded-lg bg-surface-container-high border border-surface-container-highest/60 hover:bg-surface-bright flex-row items-center gap-2 shadow-sm"
+          >
+            {isRefreshing ? (
+              <ActivityIndicator size="small" color="#c0c1ff" />
+            ) : (
+              <MaterialIcons name="refresh" size={18} color="#c7c4d7" />
+            )}
+            <Text className="text-sm font-semibold text-on-surface">
+              {isRefreshing ? "Actualizando..." : "Refrescar"}
+            </Text>
+          </TouchableOpacity>
+        )}
 
         {/* Quick Stock Adjust Button */}
         <TouchableOpacity
@@ -85,7 +110,7 @@ export default function InventoryHeader({
         <TouchableOpacity
           onPress={onNewProduct}
           activeOpacity={0.85}
-          className="h-10 px-4 rounded-lg bg-primary-container shadow-md flex-row items-center gap-2 active:scale-95 transition-transform"
+          className="h-10 px-4 rounded-lg bg-primary-container shadow-md flex-row items-center gap-2 active:scale-95"
         >
           <MaterialIcons name="add" size={20} color="#0d0096" />
           <Text className="text-sm font-bold text-on-primary-container">
