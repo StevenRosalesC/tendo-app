@@ -69,6 +69,27 @@ async function apiRequest<T>(
   return responseData as T;
 }
 
+export interface PaginationMeta {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  meta: PaginationMeta;
+}
+
+export interface GetProductsParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  inStock?: boolean;
+}
+
 export const tendoApi = {
   /**
    * Fetch current authenticated operator profile and permissions from NestJS
@@ -89,10 +110,32 @@ export const tendoApi = {
   },
 
   /**
-   * Fetch products catalog of the current store
+   * Fetch products catalog of the current store with pagination and filter support
    */
-  getProducts: (token: string) => {
-    return apiRequest<any[]>("/products", token, {
+  getProducts: (
+    token: string,
+    params?: GetProductsParams,
+  ) => {
+    const query = new URLSearchParams();
+    if (params?.page) query.append("page", String(params.page));
+    if (params?.limit) query.append("limit", String(params.limit));
+    if (params?.search && params.search.trim()) {
+      query.append("search", params.search.trim());
+    }
+    if (typeof params?.inStock === "boolean") {
+      query.append("inStock", String(params.inStock));
+    }
+    const qs = query.toString();
+    return apiRequest<PaginatedResponse<any>>(`/products${qs ? `?${qs}` : ""}`, token, {
+      method: "GET",
+    });
+  },
+
+  /**
+   * Get single product by ID
+   */
+  getProductById: (token: string, id: string) => {
+    return apiRequest<any>(`/products/${id}`, token, {
       method: "GET",
     });
   },
@@ -107,12 +150,48 @@ export const tendoApi = {
   },
 
   /**
-   * Update stock of a product
+   * Create a new product in store inventory
+   */
+  createProduct: (
+    token: string,
+    data: { name: string; barcode: string; price: number; stock?: number },
+  ) => {
+    return apiRequest<any>("/products", token, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Update full product information
+   */
+  updateProduct: (
+    token: string,
+    id: string,
+    data: { name?: string; barcode?: string; price?: number; stock?: number },
+  ) => {
+    return apiRequest<any>(`/products/${id}`, token, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Update stock of a product (with live Socket.IO broadcast)
    */
   updateProductStock: (token: string, productId: string, stock: number) => {
     return apiRequest<any>(`/products/${productId}/stock`, token, {
       method: "PATCH",
       body: JSON.stringify({ stock }),
+    });
+  },
+
+  /**
+   * Delete a product from store inventory
+   */
+  deleteProduct: (token: string, productId: string) => {
+    return apiRequest<any>(`/products/${productId}`, token, {
+      method: "DELETE",
     });
   },
 
