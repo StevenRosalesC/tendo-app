@@ -13,6 +13,13 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AlertBanner from "../../../components/ui/AlertBanner";
+import Button from "../../../components/ui/Button";
+import Divider from "../../../components/ui/Divider";
+import Input from "../../../components/ui/Input";
+import AuthFooter from "../../../components/auth/AuthFooter";
+import AuthHeader from "../../../components/auth/AuthHeader";
+import SocialAuthButton from "../../../components/auth/SocialAuthButton";
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -189,33 +196,7 @@ export default function RegisterScreen() {
             showsVerticalScrollIndicator={false}
           >
             {/* Top Header */}
-            <View className="w-full px-6 py-4 flex-row items-center justify-between border-b border-surface-container-high/40">
-              <View className="flex-row items-center gap-3">
-                <View className="w-9 h-9 rounded-xl bg-surface-container-high items-center justify-center">
-                  <MaterialIcons
-                    name="point-of-sale"
-                    size={20}
-                    color="#c0c1ff"
-                  />
-                </View>
-                <View>
-                  <Text className="text-base font-bold text-on-surface tracking-tight">
-                    Tendo
-                  </Text>
-                  <Text className="text-xs text-on-surface-variant font-medium">
-                    Omnichannel OS
-                  </Text>
-                </View>
-              </View>
-
-              <View className="flex-row items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-full border border-surface-container-high">
-                <View className="w-2 h-2 rounded-full bg-primary" />
-                <MaterialIcons name="lock" size={13} color="#c0c1ff" />
-                <Text className="text-xs font-medium text-on-surface-variant">
-                  Encrypted Node
-                </Text>
-              </View>
-            </View>
+            <AuthHeader />
 
             {/* Main Content (Responsive 2 Columns on desktop, stacked on mobile) */}
             <View className="w-full max-w-7xl mx-auto px-6 py-8 flex-1 justify-center">
@@ -385,203 +366,106 @@ export default function RegisterScreen() {
                     {/* Google Workspace Button (Only in Step 1) */}
                     {!pendingVerification && (
                       <>
-                        <TouchableOpacity
-                          activeOpacity={0.8}
-                          disabled={loading}
+                        <SocialAuthButton
                           onPress={handleGoogleSignUp}
-                          className="w-full h-12 bg-surface-container-high rounded-xl flex-row items-center justify-center gap-3 border border-surface-container-highest active:bg-surface-container-highest mb-4"
-                        >
-                          <MaterialIcons
-                            name="corporate-fare"
-                            size={18}
-                            color="#4285F4"
-                          />
-                          <Text className="text-sm font-semibold text-on-surface">
-                            Registrarse con Google Workspace
-                          </Text>
-                        </TouchableOpacity>
+                          loading={loading}
+                          label="Registrarse con Google Workspace"
+                        />
 
                         {/* Divider */}
-                        <View className="flex-row items-center justify-center my-3 relative">
-                          <View className="w-full h-[1px] bg-surface-container-highest" />
-                          <Text className="absolute bg-surface-container-low px-3 text-xs font-medium text-on-surface-variant lowercase">
-                            o con correo corporativo
-                          </Text>
-                        </View>
+                        <Divider
+                          label="o con correo corporativo"
+                          className="my-3"
+                        />
                       </>
                     )}
 
                     {/* Error Banner */}
-                    {errorMessage && (
-                      <View className="mb-4 p-3 rounded-xl bg-status-danger/15 border border-status-danger/30 flex-row items-center gap-2">
-                        <MaterialIcons
-                          name="error-outline"
-                          size={16}
-                          color="#EF4444"
-                        />
-                        <Text className="text-xs text-status-danger flex-1 font-medium">
-                          {errorMessage}
-                        </Text>
-                      </View>
-                    )}
+                    <AlertBanner message={errorMessage} className="mb-4" />
 
                     {/* Step 1: Registration Form */}
                     {!pendingVerification ? (
                       <View className="gap-4">
                         {/* Name Input */}
-                        <View className="gap-1.5">
-                          <Text className="text-xs font-medium text-on-surface">
-                            Nombre del operador
-                          </Text>
-                          <View className="flex-row items-center bg-surface-container-highest rounded-xl px-3 h-11 border border-surface-container-high">
-                            <MaterialIcons
-                              name="person"
-                              size={18}
-                              color="#c7c4d7"
-                            />
-                            <TextInput
-                              value={name}
-                              onChangeText={setName}
-                              placeholder="Ej. Roberto Morales"
-                              placeholderTextColor="#77767e"
-                              autoCapitalize="words"
-                              className="flex-1 text-sm text-on-surface ml-2.5"
-                            />
-                          </View>
-                        </View>
+                        <Input
+                          label="Nombre del operador"
+                          iconName="person"
+                          value={name}
+                          onChangeText={setName}
+                          placeholder="Ej. Roberto Morales"
+                          autoCapitalize="words"
+                        />
 
                         {/* Email Input */}
-                        <View className="gap-1.5">
-                          <Text className="text-xs font-medium text-on-surface">
-                            Correo corporativo
-                          </Text>
-                          <View className="flex-row items-center bg-surface-container-highest rounded-xl px-3 h-11 border border-surface-container-high">
-                            <MaterialIcons
-                              name="mail"
-                              size={18}
-                              color="#c7c4d7"
-                            />
-                            <TextInput
-                              value={email}
-                              onChangeText={setEmail}
-                              placeholder="operador@mitienda.com"
-                              placeholderTextColor="#77767e"
-                              keyboardType="email-address"
-                              autoCapitalize="none"
-                              className="flex-1 text-sm text-on-surface ml-2.5"
-                            />
-                          </View>
-                        </View>
+                        <Input
+                          label="Correo corporativo"
+                          iconName="mail"
+                          value={email}
+                          onChangeText={setEmail}
+                          placeholder="operador@mitienda.com"
+                          keyboardType="email-address"
+                          autoCapitalize="none"
+                        />
 
                         {/* Password Input */}
-                        <View className="gap-1.5">
-                          <Text className="text-xs font-medium text-on-surface">
-                            Contraseña (mínimo 8 caracteres)
-                          </Text>
-                          <View className="flex-row items-center bg-surface-container-highest rounded-xl px-3 h-11 border border-surface-container-high">
-                            <MaterialIcons
-                              name="vpn-key"
-                              size={18}
-                              color="#c7c4d7"
-                            />
-                            <TextInput
-                              value={password}
-                              onChangeText={setPassword}
-                              placeholder="••••••••••••"
-                              placeholderTextColor="#77767e"
-                              secureTextEntry={!showPassword}
-                              className="flex-1 text-sm text-on-surface ml-2.5"
-                            />
-                            <TouchableOpacity
-                              onPress={() => setShowPassword(!showPassword)}
-                            >
-                              <MaterialIcons
-                                name={
-                                  showPassword
-                                    ? "visibility-off"
-                                    : "visibility"
-                                }
-                                size={18}
-                                color="#c7c4d7"
-                              />
-                            </TouchableOpacity>
-                          </View>
-                        </View>
+                        <Input
+                          label="Contraseña (mínimo 8 caracteres)"
+                          iconName="vpn-key"
+                          value={password}
+                          onChangeText={setPassword}
+                          placeholder="••••••••••••"
+                          isPassword
+                        />
 
                         {/* Submit Button */}
-                        <TouchableOpacity
-                          activeOpacity={0.85}
-                          disabled={loading || fetchStatus === "fetching"}
+                        <Button
+                          label="Crear Cuenta de Operador"
+                          rightIcon={
+                            <MaterialIcons
+                              name="arrow-forward"
+                              size={18}
+                              color="#0d0096"
+                            />
+                          }
+                          fullWidth
+                          loading={loading || fetchStatus === "fetching"}
                           onPress={handleRegisterSubmit}
-                          className="w-full h-12 bg-primary-container rounded-xl flex-row items-center justify-center gap-2 shadow-lg shadow-primary-container/30 active:scale-[0.98] mt-2"
-                        >
-                          {loading || fetchStatus === "fetching" ? (
-                            <ActivityIndicator size="small" color="#0d0096" />
-                          ) : (
-                            <>
-                              <Text className="text-sm font-bold text-on-primary-container">
-                                Crear Cuenta de Operador
-                              </Text>
-                              <MaterialIcons
-                                name="arrow-forward"
-                                size={18}
-                                color="#0d0096"
-                              />
-                            </>
-                          )}
-                        </TouchableOpacity>
+                          className="mt-2"
+                        />
                       </View>
                     ) : (
                       /* Step 2: Email Verification Code */
                       <View className="gap-4">
-                        <View className="gap-1.5">
-                          <Text className="text-xs font-medium text-on-surface">
-                            Código de verificación (6 dígitos)
-                          </Text>
-                          <View className="flex-row items-center bg-surface-container-highest rounded-xl px-3 h-12 border border-surface-container-high">
-                            <MaterialIcons
-                              name="pin"
-                              size={20}
-                              color="#c7c4d7"
-                            />
-                            <TextInput
-                              value={verificationCode}
-                              onChangeText={setVerificationCode}
-                              placeholder="123456"
-                              placeholderTextColor="#77767e"
-                              keyboardType="number-pad"
-                              maxLength={6}
-                              className="flex-1 text-lg font-bold tracking-widest text-on-surface ml-2.5 text-center"
-                            />
-                          </View>
-                        </View>
+                        <Input
+                          label="Código de verificación (6 dígitos)"
+                          iconName="pin"
+                          value={verificationCode}
+                          onChangeText={setVerificationCode}
+                          placeholder="123456"
+                          keyboardType="number-pad"
+                          maxLength={6}
+                          inputClassName="text-lg font-bold tracking-widest text-center"
+                        />
 
                         {/* Submit Verification Code */}
-                        <TouchableOpacity
-                          activeOpacity={0.85}
-                          disabled={loading || fetchStatus === "fetching"}
+                        <Button
+                          label="Verificar y Activar Terminal"
+                          rightIcon={
+                            <MaterialIcons
+                              name="check-circle"
+                              size={18}
+                              color="#0d0096"
+                            />
+                          }
+                          fullWidth
+                          loading={loading || fetchStatus === "fetching"}
                           onPress={handleVerifyCode}
-                          className="w-full h-12 bg-primary-container rounded-xl flex-row items-center justify-center gap-2 shadow-lg shadow-primary-container/30 active:scale-[0.98] mt-2"
-                        >
-                          {loading || fetchStatus === "fetching" ? (
-                            <ActivityIndicator size="small" color="#0d0096" />
-                          ) : (
-                            <>
-                              <Text className="text-sm font-bold text-on-primary-container">
-                                Verificar y Activar Terminal
-                              </Text>
-                              <MaterialIcons
-                                name="check-circle"
-                                size={18}
-                                color="#0d0096"
-                              />
-                            </>
-                          )}
-                        </TouchableOpacity>
+                          className="mt-2"
+                        />
 
                         {/* Resend Code Button */}
                         <TouchableOpacity
-                          disabled={resendCooldown}
+                          disabled={!!resendCooldown}
                           onPress={handleResendCode}
                           className="py-2 items-center"
                         >
@@ -618,20 +502,7 @@ export default function RegisterScreen() {
             </View>
 
             {/* Bottom Footer */}
-            <View className="w-full px-6 py-4 border-t border-surface-container-high/40 flex-col sm:flex-row items-center justify-between gap-2">
-              <Text className="text-xs text-on-surface-variant">
-                Tendo Enterprise Terminal Network © 2025
-              </Text>
-              <View className="flex-row items-center gap-3">
-                <Text className="text-xs text-on-surface-variant">
-                  Hardware Diagnostics
-                </Text>
-                <Text className="text-tertiary-container">•</Text>
-                <Text className="text-xs text-on-surface-variant">
-                  Security Policy
-                </Text>
-              </View>
-            </View>
+            <AuthFooter />
           </ScrollView>
         </View>
       </ImageBackground>

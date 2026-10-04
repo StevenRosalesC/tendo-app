@@ -15,6 +15,14 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AlertBanner from "../../../components/ui/AlertBanner";
+import Button from "../../../components/ui/Button";
+import Divider from "../../../components/ui/Divider";
+import Input from "../../../components/ui/Input";
+import AuthFooter from "../../../components/auth/AuthFooter";
+import AuthHeader from "../../../components/auth/AuthHeader";
+import AuthFeatureShowcase from "../../../components/auth/AuthFeatureShowcase";
+import SocialAuthButton from "../../../components/auth/SocialAuthButton";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -343,97 +351,23 @@ export default function LoginPage() {
             showsVerticalScrollIndicator={false}
           >
         {/* Top Header */}
-        <View className="w-full px-6 py-4 flex-row items-center justify-between border-b border-surface-container-high/40">
-          <View className="flex-row items-center gap-3">
-            <View className="w-9 h-9 rounded-xl bg-surface-container-high items-center justify-center">
-              <MaterialIcons name="point-of-sale" size={20} color="#c0c1ff" />
-            </View>
-            <View>
-              <Text className="text-base font-bold text-on-surface tracking-tight">
-                Tendo
-              </Text>
-              <Text className="text-xs text-on-surface-variant font-medium">
-                Omnichannel OS
-              </Text>
-            </View>
-          </View>
-
-          <View className="flex-row items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-full border border-surface-container-high">
-            <View className="w-2 h-2 rounded-full bg-primary" />
-            <MaterialIcons name="lock" size={13} color="#c0c1ff" />
-            <Text className="text-xs font-medium text-on-surface-variant">
-              Encrypted Node
-            </Text>
-          </View>
-        </View>
+        <AuthHeader
+          badgeLabel="Encrypted Node"
+          badgeDotColor="bg-primary"
+          badgeIcon="lock"
+        />
 
         {/* Main Content (Responsive 2 Columns on desktop, stacked on mobile) */}
         <View className="w-full max-w-7xl mx-auto px-6 py-8 flex-1 justify-center">
           <View className="flex-col lg:flex-row gap-10 items-center justify-between">
             {/* Left Column: Value Showcase & Enterprise Telemetry */}
-            <View className="w-full lg:w-7/12 gap-6">
-              {/* Hero Title */}
-              <View className="gap-2">
-                <Text className="text-3xl lg:text-4xl font-extrabold text-on-surface tracking-tight">
-                  Punto de Venta Omnicanal
-                </Text>
-                <Text className="text-sm lg:text-base text-on-surface-variant leading-relaxed max-w-xl">
-                  Plataforma unificada de alta velocidad para retail moderno,
-                  cadenas de distribución y hostelería con sincronización de
-                  inventario distribuida.
-                </Text>
-              </View>
-              {/* Hardware Card */}
-              <View className="bg-surface-container-low p-4 rounded-2xl border border-surface-container-high flex-row items-center gap-4">
-                <Image
-                  source={{
-                    uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuA_dsumHIb5LnL60TL3b36FsbMCdNE97nAHAvdzVX4DYToW2DXP9kX7F_yhAaBAZ23H4I0mjDuG6S9Q_T2eA1gbtghrgDDkUHKBqNVop86pILPxQSJj1aLWw5NX1lQt3RzAx1bKPa26yd6lC5X7AH_qAqhklu_ejhhDC7MaPgT5nLyPdVySDQ-7P-ScBgHcEWJuGyMaBBqkzRSY_0MQXHO2K27pyUafk8Hsfz4hvnB9sPOQzzZ-_ft6Fw",
-                  }}
-                  className="w-20 h-20 rounded-xl bg-surface-container-high"
-                  resizeMode="cover"
-                />
-                <View className="flex-1">
-                  <Text className="text-xs font-bold uppercase tracking-wider text-secondary">
-                    Despliegue Instantáneo
-                  </Text>
-                  <Text className="text-sm font-bold text-on-surface">
-                    Terminales Verifone &amp; Sunmi Homologadas
-                  </Text>
-                  <Text className="text-xs text-on-surface-variant mt-0.5">
-                    Soporte directo para impresoras térmicas ESC/POS, balanzas y
-                    lectores 2D Zebra.
-                  </Text>
-                </View>
-              </View>
-
-              {/* Certifications Footer */}
-              <View className="flex-row flex-wrap items-center gap-3 pt-1">
-                <View className="flex-row items-center gap-1.5">
-                  <MaterialIcons
-                    name="verified-user"
-                    size={16}
-                    color="#c0c1ff"
-                  />
-                  <Text className="text-xs font-medium text-on-surface-variant">
-                    PCI DSS Nivel 1
-                  </Text>
-                </View>
-                <Text className="text-tertiary-container">•</Text>
-                <View className="flex-row items-center gap-1.5">
-                  <MaterialIcons name="security" size={16} color="#c0c1ff" />
-                  <Text className="text-xs font-medium text-on-surface-variant">
-                    Cifrado E2E AES-256
-                  </Text>
-                </View>
-                <Text className="text-tertiary-container">•</Text>
-                <View className="flex-row items-center gap-1.5">
-                  <MaterialIcons name="fingerprint" size={16} color="#c0c1ff" />
-                  <Text className="text-xs font-medium text-on-surface-variant">
-                    Clerk Enterprise Guard
-                  </Text>
-                </View>
-              </View>
-            </View>
+            <AuthFeatureShowcase
+              certifications={[
+                { icon: "verified-user", label: "PCI DSS Nivel 1" },
+                { icon: "security", label: "Cifrado E2E AES-256" },
+                { icon: "fingerprint", label: "Clerk Enterprise Guard" },
+              ]}
+            />
 
             {/* Right Column: Authentication Terminal Card */}
             <View className="w-full lg:w-5/12 max-w-md">
@@ -555,74 +489,40 @@ export default function LoginPage() {
                     </Text>
 
                     {/* Google Workspace Button */}
-                    <TouchableOpacity
-                      activeOpacity={0.8}
-                      disabled={loading}
+                    <SocialAuthButton
                       onPress={handleGoogleSignIn}
-                      className="w-full h-12 bg-surface-container-high rounded-xl flex-row items-center justify-center gap-3 border border-surface-container-highest active:bg-surface-container-highest mb-4"
-                    >
-                      <FontAwesome
-                        name="google"
-                        size={18}
-                        color="#4285F4"
-                      />
-                      <Text className="text-sm font-semibold text-on-surface">
-                        Continuar con Google Workspace
-                      </Text>
-                    </TouchableOpacity>
+                      loading={loading}
+                    />
 
                     {/* Divider */}
-                    <View className="flex-row items-center justify-center my-3 relative">
-                      <View className="w-full h-[1px] bg-surface-container-highest" />
-                      <Text className="absolute bg-surface-container-low px-3 text-xs font-medium text-on-surface-variant lowercase">
-                        o con credencial de tienda
-                      </Text>
-                    </View>
+                    <Divider
+                      label="o con credencial de tienda"
+                      className="my-3"
+                    />
 
                     {/* Error Banner */}
-                    {errorMessage && (
-                      <View className="mb-4 p-3 rounded-xl bg-status-danger/15 border border-status-danger/30 flex-row items-center gap-2">
-                        <MaterialIcons
-                          name="error-outline"
-                          size={16}
-                          color="#EF4444"
-                        />
-                        <Text className="text-xs text-status-danger flex-1 font-medium">
-                          {errorMessage}
-                        </Text>
-                      </View>
-                    )}
+                    <AlertBanner message={errorMessage} className="mb-4" />
 
                     {/* Corporate Email Form */}
                     <View className="gap-4">
-                      <View className="gap-1.5">
-                        <View className="flex-row justify-between items-center">
-                          <Text className="text-xs font-medium text-on-surface">
-                            Correo electrónico
-                          </Text>
+                      <Input
+                        label="Correo electrónico"
+                        rightLabel={
                           <Text className="text-[10px] text-on-surface-variant font-mono">
                             Enter ↵
                           </Text>
-                        </View>
-                        <View className="flex-row items-center bg-surface-container-highest rounded-xl px-3 h-11 border border-surface-container-high">
-                          <MaterialIcons name="mail" size={18} color="#c7c4d7" />
-                          <TextInput
-                            value={email}
-                            onChangeText={setEmail}
-                            placeholder="nombre@mitienda.com"
-                            placeholderTextColor="#77767e"
-                            keyboardType="email-address"
-                            autoCapitalize="none"
-                            className="flex-1 text-sm text-on-surface ml-2.5"
-                          />
-                        </View>
-                      </View>
+                        }
+                        iconName="mail"
+                        value={email}
+                        onChangeText={setEmail}
+                        placeholder="nombre@mitienda.com"
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                      />
 
-                      <View className="gap-1.5">
-                        <View className="flex-row justify-between items-center">
-                          <Text className="text-xs font-medium text-on-surface">
-                            Contraseña
-                          </Text>
+                      <Input
+                        label="Contraseña"
+                        rightLabel={
                           <Link href="/forgot-password" asChild>
                             <TouchableOpacity>
                               <Text className="text-xs font-medium text-primary">
@@ -630,52 +530,30 @@ export default function LoginPage() {
                               </Text>
                             </TouchableOpacity>
                           </Link>
-                        </View>
-                        <View className="flex-row items-center bg-surface-container-highest rounded-xl px-3 h-11 border border-surface-container-high">
-                          <MaterialIcons name="vpn-key" size={18} color="#c7c4d7" />
-                          <TextInput
-                            value={password}
-                            onChangeText={setPassword}
-                            placeholder="••••••••••••"
-                            placeholderTextColor="#77767e"
-                            secureTextEntry={!showPassword}
-                            className="flex-1 text-sm text-on-surface ml-2.5"
-                          />
-                          <TouchableOpacity
-                            onPress={() => setShowPassword(!showPassword)}
-                          >
-                            <MaterialIcons
-                              name={showPassword ? "visibility-off" : "visibility"}
-                              size={18}
-                              color="#c7c4d7"
-                            />
-                          </TouchableOpacity>
-                        </View>
-                      </View>
+                        }
+                        iconName="vpn-key"
+                        value={password}
+                        onChangeText={setPassword}
+                        placeholder="••••••••••••"
+                        isPassword
+                      />
                     </View>
 
                     {/* Primary Submit Button */}
-                    <TouchableOpacity
-                      activeOpacity={0.85}
-                      disabled={loading || fetchStatus === "fetching"}
+                    <Button
+                      label="Continuar a Terminal"
+                      rightIcon={
+                        <MaterialIcons
+                          name="arrow-forward"
+                          size={18}
+                          color="#0d0096"
+                        />
+                      }
+                      fullWidth
+                      loading={loading || fetchStatus === "fetching"}
                       onPress={handleAuthSubmit}
-                      className="w-full h-12 bg-primary-container rounded-xl flex-row items-center justify-center gap-2 shadow-lg shadow-primary-container/30 active:scale-[0.98] mt-6"
-                    >
-                      {loading || fetchStatus === "fetching" ? (
-                        <ActivityIndicator size="small" color="#0d0096" />
-                      ) : (
-                        <>
-                          <Text className="text-sm font-bold text-on-primary-container">
-                            Continuar a Terminal
-                          </Text>
-                          <MaterialIcons
-                            name="arrow-forward"
-                            size={18}
-                            color="#0d0096"
-                          />
-                        </>
-                      )}
-                    </TouchableOpacity>
+                      className="mt-6"
+                    />
 
                     <View nativeID="clerk-captcha" />
                   </View>
@@ -736,20 +614,7 @@ export default function LoginPage() {
         </View>
 
         {/* Bottom Footer */}
-        <View className="w-full px-6 py-4 border-t border-surface-container-high/40 flex-col sm:flex-row items-center justify-between gap-2">
-          <Text className="text-xs text-on-surface-variant">
-            Tendo Enterprise Terminal Network © 2025
-          </Text>
-          <View className="flex-row items-center gap-3">
-            <Text className="text-xs text-on-surface-variant">
-              Hardware Diagnostics
-            </Text>
-            <Text className="text-tertiary-container">•</Text>
-            <Text className="text-xs text-on-surface-variant">
-              Security Policy
-            </Text>
-          </View>
-        </View>
+        <AuthFooter />
           </ScrollView>
         </View>
       </ImageBackground>

@@ -3,16 +3,20 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   ImageBackground,
   Platform,
   ScrollView,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+import AuthFooter from "@/components/auth/AuthFooter";
+import AuthHeader from "@/components/auth/AuthHeader";
+import AlertBanner from "@/components/ui/AlertBanner";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
@@ -28,8 +32,6 @@ export default function ForgotPasswordScreen() {
   const [confirmPassword, setConfirmPassword] = useState<string>("");
 
   // UI state
-  const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -213,29 +215,11 @@ export default function ForgotPasswordScreen() {
             showsVerticalScrollIndicator={false}
           >
             {/* Top Navigation / Brand Header */}
-            <View className="w-full px-6 py-4 flex-row items-center justify-between border-b border-surface-container-high/40">
-              <View className="flex-row items-center gap-3">
-                <View className="w-9 h-9 rounded-xl bg-surface-container-high items-center justify-center">
-                  <MaterialIcons name="point-of-sale" size={20} color="#c0c1ff" />
-                </View>
-                <View>
-                  <Text className="text-base font-bold text-on-surface tracking-tight">
-                    Tendo
-                  </Text>
-                  <Text className="text-xs text-on-surface-variant font-medium">
-                    Omnichannel OS
-                  </Text>
-                </View>
-              </View>
-
-              <View className="flex-row items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-full border border-surface-container-high">
-                <View className="w-2 h-2 rounded-full bg-status-success" />
-                <MaterialIcons name="security" size={13} color="#c0c1ff" />
-                <Text className="text-xs font-medium text-on-surface-variant">
-                  Recovery Node
-                </Text>
-              </View>
-            </View>
+            <AuthHeader
+              badgeLabel="Recovery Node"
+              badgeDotColor="bg-status-success"
+              badgeIcon="security"
+            />
 
             {/* Main Content Area */}
             <View className="w-full max-w-7xl mx-auto px-6 py-8 flex-1 justify-center">
@@ -352,21 +336,19 @@ export default function ForgotPasswordScreen() {
 
                     {/* Feedback Messages */}
                     {errorMessage && (
-                      <View className="mt-4 p-3 bg-error-container/40 border border-error/50 rounded-xl flex-row items-center gap-2.5">
-                        <MaterialIcons name="error-outline" size={18} color="#ffb4ab" />
-                        <Text className="text-xs text-on-error-container flex-1 font-medium">
-                          {errorMessage}
-                        </Text>
-                      </View>
+                      <AlertBanner
+                        message={errorMessage}
+                        type="error"
+                        className="mt-4"
+                      />
                     )}
 
                     {successMessage && (
-                      <View className="mt-4 p-3 bg-status-success/20 border border-status-success/50 rounded-xl flex-row items-center gap-2.5">
-                        <MaterialIcons name="check-circle" size={18} color="#10B981" />
-                        <Text className="text-xs text-status-success flex-1 font-medium">
-                          {successMessage}
-                        </Text>
-                      </View>
+                      <AlertBanner
+                        message={successMessage}
+                        type="success"
+                        className="mt-4"
+                      />
                     )}
 
                     {/* Step 1: Request Code Form */}
@@ -377,45 +359,30 @@ export default function ForgotPasswordScreen() {
                           Te enviaremos un código de seguridad para verificar tu identidad.
                         </Text>
 
-                        <View className="gap-1.5">
-                          <Text className="text-xs font-medium text-on-surface">
-                            Correo Corporativo
-                          </Text>
-                          <View className="flex-row items-center bg-surface-container-highest rounded-xl px-3 h-11 border border-surface-container-high">
-                            <MaterialIcons name="mail-outline" size={18} color="#c7c4d7" />
-                            <TextInput
-                              value={email}
-                              onChangeText={setEmail}
-                              placeholder="operador@tendo.app"
-                              placeholderTextColor="#77767e"
-                              keyboardType="email-address"
-                              autoCapitalize="none"
-                              className="flex-1 text-sm text-on-surface ml-2.5"
-                            />
-                          </View>
-                        </View>
+                        <Input
+                          label="Correo Corporativo"
+                          iconName="mail-outline"
+                          value={email}
+                          onChangeText={setEmail}
+                          placeholder="operador@tendo.app"
+                          keyboardType="email-address"
+                          autoCapitalize="none"
+                        />
 
                         {/* Submit Button */}
-                        <TouchableOpacity
+                        <Button
+                          label="Enviar Código de Recuperación"
                           onPress={handleSendCode}
-                          disabled={loading}
-                          className="w-full h-11 rounded-xl bg-primary-container items-center justify-center shadow-md active:opacity-90 flex-row gap-2 mt-2"
-                        >
-                          {loading ? (
-                            <ActivityIndicator size="small" color="#0d0096" />
-                          ) : (
-                            <>
-                              <Text className="text-sm font-semibold text-on-primary-container">
-                                Enviar Código de Recuperación
-                              </Text>
-                              <MaterialIcons
-                                name="arrow-forward"
-                                size={16}
-                                color="#0d0096"
-                              />
-                            </>
-                          )}
-                        </TouchableOpacity>
+                          loading={loading}
+                          rightIcon={
+                            <MaterialIcons
+                              name="arrow-forward"
+                              size={16}
+                              color="#0d0096"
+                            />
+                          }
+                          className="mt-2"
+                        />
                       </View>
                     )}
 
@@ -434,12 +401,10 @@ export default function ForgotPasswordScreen() {
                         </View>
 
                         {/* OTP Verification Code */}
-                        <View className="gap-1.5">
-                          <View className="flex-row justify-between items-center">
-                            <Text className="text-xs font-medium text-on-surface">
-                              Código de Seguridad (6 dígitos)
-                            </Text>
-                            {resendCooldown > 0 ? (
+                        <Input
+                          label="Código de Seguridad (6 dígitos)"
+                          rightLabel={
+                            resendCooldown > 0 ? (
                               <Text className="text-xs text-on-surface-variant">
                                 Reenviar en {resendCooldown}s
                               </Text>
@@ -449,79 +414,36 @@ export default function ForgotPasswordScreen() {
                                   Reenviar código
                                 </Text>
                               </TouchableOpacity>
-                            )}
-                          </View>
-                          <View className="flex-row items-center bg-surface-container-highest rounded-xl px-3 h-11 border border-surface-container-high">
-                            <MaterialIcons name="dialpad" size={18} color="#c7c4d7" />
-                            <TextInput
-                              value={verificationCode}
-                              onChangeText={setVerificationCode}
-                              placeholder="123456"
-                              placeholderTextColor="#77767e"
-                              keyboardType="number-pad"
-                              maxLength={6}
-                              className="flex-1 text-sm font-mono tracking-widest text-on-surface ml-2.5"
-                            />
-                          </View>
-                        </View>
+                            )
+                          }
+                          iconName="dialpad"
+                          value={verificationCode}
+                          onChangeText={setVerificationCode}
+                          placeholder="123456"
+                          keyboardType="number-pad"
+                          maxLength={6}
+                          inputClassName="font-mono tracking-widest"
+                        />
 
                         {/* New Password */}
-                        <View className="gap-1.5">
-                          <Text className="text-xs font-medium text-on-surface">
-                            Nueva Contraseña
-                          </Text>
-                          <View className="flex-row items-center bg-surface-container-highest rounded-xl px-3 h-11 border border-surface-container-high">
-                            <MaterialIcons name="vpn-key" size={18} color="#c7c4d7" />
-                            <TextInput
-                              value={newPassword}
-                              onChangeText={setNewPassword}
-                              placeholder="Mínimo 8 caracteres"
-                              placeholderTextColor="#77767e"
-                              secureTextEntry={!showPassword}
-                              className="flex-1 text-sm text-on-surface ml-2.5"
-                            />
-                            <TouchableOpacity
-                              onPress={() => setShowPassword(!showPassword)}
-                            >
-                              <MaterialIcons
-                                name={showPassword ? "visibility-off" : "visibility"}
-                                size={18}
-                                color="#c7c4d7"
-                              />
-                            </TouchableOpacity>
-                          </View>
-                        </View>
+                        <Input
+                          label="Nueva Contraseña"
+                          iconName="vpn-key"
+                          value={newPassword}
+                          onChangeText={setNewPassword}
+                          placeholder="Mínimo 8 caracteres"
+                          isPassword
+                        />
 
                         {/* Confirm New Password */}
-                        <View className="gap-1.5">
-                          <Text className="text-xs font-medium text-on-surface">
-                            Confirmar Nueva Contraseña
-                          </Text>
-                          <View className="flex-row items-center bg-surface-container-highest rounded-xl px-3 h-11 border border-surface-container-high">
-                            <MaterialIcons name="lock-outline" size={18} color="#c7c4d7" />
-                            <TextInput
-                              value={confirmPassword}
-                              onChangeText={setConfirmPassword}
-                              placeholder="Repite la contraseña"
-                              placeholderTextColor="#77767e"
-                              secureTextEntry={!showConfirmPassword}
-                              className="flex-1 text-sm text-on-surface ml-2.5"
-                            />
-                            <TouchableOpacity
-                              onPress={() =>
-                                setShowConfirmPassword(!showConfirmPassword)
-                              }
-                            >
-                              <MaterialIcons
-                                name={
-                                  showConfirmPassword ? "visibility-off" : "visibility"
-                                }
-                                size={18}
-                                color="#c7c4d7"
-                              />
-                            </TouchableOpacity>
-                          </View>
-                        </View>
+                        <Input
+                          label="Confirmar Nueva Contraseña"
+                          iconName="lock-outline"
+                          value={confirmPassword}
+                          onChangeText={setConfirmPassword}
+                          placeholder="Repite la contraseña"
+                          isPassword
+                        />
 
                         {/* Password rules badge */}
                         <View className="flex-row items-center gap-2 pt-1">
@@ -542,26 +464,19 @@ export default function ForgotPasswordScreen() {
                         </View>
 
                         {/* Submit Button */}
-                        <TouchableOpacity
+                        <Button
+                          label="Confirmar y Acceder"
                           onPress={handleResetPassword}
-                          disabled={loading}
-                          className="w-full h-11 rounded-xl bg-primary-container items-center justify-center shadow-md active:opacity-90 flex-row gap-2 mt-2"
-                        >
-                          {loading ? (
-                            <ActivityIndicator size="small" color="#0d0096" />
-                          ) : (
-                            <>
-                              <Text className="text-sm font-semibold text-on-primary-container">
-                                Confirmar y Acceder
-                              </Text>
-                              <MaterialIcons
-                                name="check"
-                                size={16}
-                                color="#0d0096"
-                              />
-                            </>
-                          )}
-                        </TouchableOpacity>
+                          loading={loading}
+                          rightIcon={
+                            <MaterialIcons
+                              name="check"
+                              size={16}
+                              color="#0d0096"
+                            />
+                          }
+                          className="mt-2"
+                        />
                       </View>
                     )}
 
@@ -585,14 +500,10 @@ export default function ForgotPasswordScreen() {
             </View>
 
             {/* Bottom Footer */}
-            <View className="w-full px-6 py-4 border-t border-surface-container-high/40 flex-row flex-wrap items-center justify-between gap-2">
-              <Text className="text-xs text-on-surface-variant">
-                Tendo POS Enterprise Security • PCI-DSS Compliant • TLS 1.3
-              </Text>
-              <Text className="text-xs text-on-surface-variant">
-                Sistema Operativo de Punto de Venta v1.0.0
-              </Text>
-            </View>
+            <AuthFooter
+              copyrightText="Tendo POS Enterprise Security • PCI-DSS Compliant • TLS 1.3"
+              secondaryText="Sistema Operativo de Punto de Venta v1.0.0"
+            />
           </ScrollView>
         </View>
       </ImageBackground>
