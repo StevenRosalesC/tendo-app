@@ -9,6 +9,7 @@ export interface DesktopHeaderProps {
   onSync?: () => void;
   stationName?: string;
   branchName?: string;
+  isOnline?: boolean;
 }
 
 export default function DesktopHeader({
@@ -19,6 +20,7 @@ export default function DesktopHeader({
   onSync,
   stationName = "Caja #04",
   branchName = "Sucursal Condesa",
+  isOnline = true,
 }: DesktopHeaderProps) {
   return (
     <View className="h-16 bg-surface-container/90 border-b border-surface-container-high/60 px-6 hidden md:flex flex-row items-center justify-between z-40 backdrop-blur-md">
@@ -34,8 +36,14 @@ export default function DesktopHeader({
         <View className="h-4 w-[1px] bg-surface-container-highest" />
 
         <View className="flex-row items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high">
-          <View className="w-2 h-2 rounded-full bg-primary" />
-          <Text className="text-xs font-semibold text-on-surface">En línea</Text>
+          <View
+            className={`w-2 h-2 rounded-full ${
+              isOnline ? "bg-primary animate-pulse" : "bg-error"
+            }`}
+          />
+          <Text className="text-xs font-semibold text-on-surface">
+            {isOnline ? "En línea" : "Desconectado"}
+          </Text>
         </View>
       </View>
 

@@ -8,12 +8,16 @@ import DesktopHeader from "../../components/layout/DesktopHeader";
 import DesktopSidebar from "../../components/layout/DesktopSidebar";
 import MobileHeader from "../../components/layout/MobileHeader";
 import Navigation from "../../components/Navigation";
+import { useCurrentUser } from "../../hooks/useCurrentUser";
+import { usePosSocket } from "../../hooks/usePosSocket";
 
 export default function AppLayout() {
   const router = useRouter();
   const pathname = usePathname();
   const { isSignedIn, isLoaded, signOut } = useAuth();
   const { user } = useUser();
+  const { user: userProfile } = useCurrentUser();
+  const { isConnected: isWsConnected } = usePosSocket();
 
   const [sessionTime, setSessionTime] = useState<string>("04:22:18");
 
@@ -42,9 +46,12 @@ export default function AppLayout() {
     return <Redirect href="/(auth)/login" />;
   }
 
-  const operatorName = user?.fullName || "Carlos Mendoza";
-  const firstName = user?.firstName || "Carlos";
+  const operatorName = userProfile?.name || user?.fullName || "Carlos Mendoza";
+  const firstName =
+    userProfile?.name?.split(" ")[0] || user?.firstName || "Carlos";
   const operatorInitial = firstName.charAt(0).toUpperCase();
+  const storeName = userProfile?.store?.name || "Sucursal Condesa";
+  const roleName = userProfile?.role || "ADMIN";
 
   // Dynamic titles based on active route
   const getPageInfo = () => {
@@ -74,6 +81,9 @@ export default function AppLayout() {
           currentPath={pathname}
           operatorName={operatorName}
           operatorInitial={operatorInitial}
+          roleName={roleName}
+          storeName={storeName}
+          isHardwareConnected={true}
           onNavigate={(route) => router.replace(route as any)}
           onSignOut={() => signOut()}
         />
@@ -85,6 +95,9 @@ export default function AppLayout() {
             pageTitle={pageInfo.desktop}
             sessionTime={sessionTime}
             operatorInitial={operatorInitial}
+            stationName="Caja #01"
+            branchName={storeName}
+            isOnline={isWsConnected}
             onLock={() => signOut()}
             onSync={() => {}}
           />
@@ -93,6 +106,8 @@ export default function AppLayout() {
           <MobileHeader
             pageTitle={pageInfo.mobile}
             operatorInitial={operatorInitial}
+            stationName="Caja #01"
+            isOnline={isWsConnected}
           />
 
           {/* 3. Active Screen Content */}

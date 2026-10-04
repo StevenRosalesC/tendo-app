@@ -13,6 +13,9 @@ export interface DesktopSidebarProps {
   currentPath: string;
   operatorName: string;
   operatorInitial: string;
+  roleName?: string;
+  storeName?: string;
+  isHardwareConnected?: boolean;
   onNavigate: (route: string) => void;
   onSignOut: () => void;
 }
@@ -21,6 +24,9 @@ export default function DesktopSidebar({
   currentPath,
   operatorName,
   operatorInitial,
+  roleName = "ADMIN",
+  storeName = "Tienda Principal",
+  isHardwareConnected = true,
   onNavigate,
   onSignOut,
 }: DesktopSidebarProps) {
@@ -142,7 +148,7 @@ export default function DesktopSidebar({
                 {operatorName}
               </Text>
               <Text className="text-[10px] text-on-surface-variant truncate">
-                Cajero • Caja Principal 01
+                {roleName} • {storeName}
               </Text>
             </View>
             <TouchableOpacity

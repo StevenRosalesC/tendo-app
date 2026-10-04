@@ -5,6 +5,7 @@ export interface MobileHeaderProps {
   operatorInitial: string;
   stationName?: string;
   shiftStatus?: string;
+  isOnline?: boolean;
 }
 
 export default function MobileHeader({
@@ -12,15 +13,24 @@ export default function MobileHeader({
   operatorInitial,
   stationName = "Caja #04",
   shiftStatus = "Turno Activo",
+  isOnline = true,
 }: MobileHeaderProps) {
   return (
     <View className="w-full bg-surface-container-lowest/80 border-b border-surface-container-high/40 px-4 py-3 flex md:hidden">
       <View className="w-full flex-row items-center justify-between">
         <View className="flex-row items-center gap-2">
           <View className="flex-row items-center gap-1.5">
-            <View className="w-2 h-2 rounded-full bg-cyan-400" />
-            <Text className="text-[11px] font-bold text-cyan-300 uppercase tracking-wider">
-              WS Live
+            <View
+              className={`w-2 h-2 rounded-full ${
+                isOnline ? "bg-cyan-400" : "bg-error"
+              }`}
+            />
+            <Text
+              className={`text-[11px] font-bold uppercase tracking-wider ${
+                isOnline ? "text-cyan-300" : "text-error"
+              }`}
+            >
+              {isOnline ? "WS Live" : "WS Off"}
             </Text>
           </View>
           <Text className="text-outline-variant font-medium">/</Text>
