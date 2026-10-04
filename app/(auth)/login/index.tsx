@@ -1,7 +1,7 @@
 import { useClerk, useSignIn, useSSO } from "@clerk/expo";
-import { MaterialIcons,FontAwesome } from "@expo/vector-icons";
-import { useRouter,Link } from "expo-router";
-import { useState } from "react";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
+import { Link, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -28,6 +28,44 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Device Trust / MFA state for new devices (e.g. mobile Expo Go)
+  const [verificationStep, setVerificationStep] = useState<boolean>(false);
+  const [verificationCode, setVerificationCode] = useState<string>("");
+  const [resendCooldown, setResendCooldown] = useState<number>(0);
+  const [hasSentMfaCode, setHasSentMfaCode] = useState<boolean>(false);
+
+  // Handle countdown timer for resending MFA code
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    if (resendCooldown > 0) {
+      timer = setTimeout(() => {
+        setResendCooldown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [resendCooldown]);
+
+  // Automatically transition to verification mode if Clerk requires Device Trust / MFA
+  useEffect(() => {
+    if (
+      signIn?.status === "needs_client_trust" ||
+      signIn?.status === "needs_second_factor"
+    ) {
+      setVerificationStep(true);
+      if (!hasSentMfaCode) {
+        setHasSentMfaCode(true);
+        const emailCodeFactor = signIn.supportedSecondFactors?.find(
+          (factor) => factor.strategy === "email_code",
+        );
+        if (emailCodeFactor) {
+          signIn.mfa.sendEmailCode().catch((err) => {
+            console.error("Auto-send MFA email code error:", err);
+          });
+        }
+      }
+    }
+  }, [signIn?.status, hasSentMfaCode]);
 
   // Commented states for future PIN and station selection implementation:
   // const [authMode, setAuthMode] = useState<"email" | "pin">("email");
@@ -58,7 +96,7 @@ export default function LoginPage() {
   const handleAuthSubmit = async () => {
     setErrorMessage(null);
 
-    /* Lógica de PIN comentada para futura implementación:
+    /* Commented PIN logic for future implementation:
     if (authMode === "pin") {
       const pinCode = pin.join("");
       if (pinCode.length < 4) {
@@ -109,6 +147,40 @@ export default function LoginPage() {
             }
           },
         });
+      } else if (
+        signIn.status === "needs_client_trust" ||
+        signIn.status === "needs_second_factor"
+      ) {
+        setVerificationStep(true);
+        setErrorMessage(null);
+        setHasSentMfaCode(true);
+
+        const emailCodeFactor = signIn.supportedSecondFactors?.find(
+          (factor) => factor.strategy === "email_code",
+        );
+        if (emailCodeFactor) {
+          const { error: sendErr } = await signIn.mfa.sendEmailCode();
+          if (sendErr) {
+            setErrorMessage(
+              sendErr.message ||
+                "Error al enviar el código de verificación al correo.",
+            );
+          }
+        } else {
+          const phoneCodeFactor = signIn.supportedSecondFactors?.find(
+            (factor) => factor.strategy === "phone_code",
+          );
+          if (phoneCodeFactor) {
+            const { error: sendErr } = await signIn.mfa.sendPhoneCode();
+            if (sendErr) {
+              setErrorMessage(
+                sendErr.message ||
+                  "Error al enviar el código de verificación al teléfono.",
+              );
+            }
+          }
+        }
+        setResendCooldown(30);
       } else {
         setErrorMessage(`Estado adicional requerido: ${signIn.status}`);
       }
@@ -120,7 +192,117 @@ export default function LoginPage() {
     }
   };
 
-  /* Función de cambio de estación comentada para futura implementación:
+  // Verify MFA / Device Trust code
+  const handleVerifyMfa = async () => {
+    if (!verificationCode.trim()) {
+      setErrorMessage("Por favor ingresa el código de 6 dígitos.");
+      return;
+    }
+
+    if (!signIn) {
+      setErrorMessage("El cliente de autenticación no está listo.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setErrorMessage(null);
+
+      const emailFactor = signIn.supportedSecondFactors?.find(
+        (factor) => factor.strategy === "email_code",
+      );
+
+      let verifyResult;
+      if (emailFactor) {
+        verifyResult = await signIn.mfa.verifyEmailCode({
+          code: verificationCode.trim(),
+        });
+      } else {
+        verifyResult = await signIn.mfa.verifyPhoneCode({
+          code: verificationCode.trim(),
+        });
+      }
+
+      if (verifyResult?.error) {
+        setErrorMessage(
+          verifyResult.error.message ||
+            "Código de verificación inválido o expirado.",
+        );
+        return;
+      }
+
+      if (signIn.status === "complete") {
+        await signIn.finalize({
+          navigate: ({ decorateUrl }) => {
+            const url = decorateUrl("/home");
+            if (Platform.OS === "web" && url.startsWith("http")) {
+              window.location.href = url;
+            } else {
+              router.replace(url as any);
+            }
+          },
+        });
+      } else {
+        setErrorMessage(`Estado adicional requerido: ${signIn.status}`);
+      }
+    } catch (err: any) {
+      console.error("Device trust verification error:", err);
+      setErrorMessage(
+        err?.message || "Ocurrió un error al verificar el dispositivo.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Resend MFA / Device Trust code
+  const handleResendMfaCode = async () => {
+    if (!signIn || resendCooldown > 0) return;
+    try {
+      setLoading(true);
+      setErrorMessage(null);
+
+      const emailFactor = signIn.supportedSecondFactors?.find(
+        (factor) => factor.strategy === "email_code",
+      );
+      if (emailFactor) {
+        const { error } = await signIn.mfa.sendEmailCode();
+        if (error) {
+          setErrorMessage(error.message || "No se pudo reenviar el código.");
+          return;
+        }
+      } else {
+        const { error } = await signIn.mfa.sendPhoneCode();
+        if (error) {
+          setErrorMessage(error.message || "No se pudo reenviar el código.");
+          return;
+        }
+      }
+      setResendCooldown(30);
+    } catch (err: any) {
+      setErrorMessage(err?.message || "No se pudo reenviar el código.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Cancel MFA verification and reset sign-in state
+  const handleCancelMfa = async () => {
+    try {
+      setLoading(true);
+      await signIn?.reset();
+    } catch (e) {
+      console.error("Reset sign-in error:", e);
+    } finally {
+      setVerificationStep(false);
+      setHasSentMfaCode(false);
+      setVerificationCode("");
+      setErrorMessage(null);
+      setLoading(false);
+    }
+  };
+
+  /* Commented change station function for future implementation:
   const handleChangeStation = () => {
     if (Platform.OS === "web") {
       const val = window.prompt(
@@ -256,221 +438,248 @@ export default function LoginPage() {
             {/* Right Column: Authentication Terminal Card */}
             <View className="w-full lg:w-5/12 max-w-md">
               <View className="bg-surface-container-low p-6 sm:p-8 rounded-3xl border border-surface-container-high shadow-2xl">
-                {/* Card Title */}
-                <View className="flex-row items-center justify-between mb-1">
-                  <Text className="text-xl font-bold text-on-surface tracking-tight">
-                    Bienvenido de nuevo
-                  </Text>
-                  <MaterialIcons name="terminal" size={24} color="#c0c1ff" />
-                </View>
-                <Text className="text-xs text-on-surface-variant mb-6">
-                  Inicia sesión en tu terminal o espacio de trabajo.
-                </Text>
+                {verificationStep ? (
+                  /* Device Trust / MFA Verification Flow for New Devices */
+                  <View>
+                    <View className="items-center pb-4 mb-3 border-b border-surface-container-high/40">
+                      <View className="w-12 h-12 rounded-2xl bg-secondary-container/30 border border-secondary/40 items-center justify-center mb-2.5">
+                        <MaterialIcons name="devices" size={24} color="#c0c1ff" />
+                      </View>
+                      <Text className="text-xl font-bold text-on-surface text-center tracking-tight">
+                        Dispositivo No Reconocido
+                      </Text>
+                      <Text className="text-xs text-on-surface-variant text-center mt-1 leading-relaxed max-w-xs">
+                        Por seguridad (Device Trust), ingresa el código de seguridad de 6 dígitos que enviamos para autorizar este acceso.
+                      </Text>
+                      <View className="mt-3 px-3 py-1.5 rounded-lg bg-surface-container-high border border-surface-container-highest flex-row items-center gap-2">
+                        <MaterialIcons name="mail-outline" size={14} color="#c0c1ff" />
+                        <Text className="text-xs font-semibold text-on-surface">
+                          {email || signIn?.identifier || "tu correo registrado"}
+                        </Text>
+                      </View>
+                    </View>
 
-                {/* Google Workspace Button */}
-                <TouchableOpacity
-                  activeOpacity={0.8}
-                  disabled={loading}
-                  onPress={handleGoogleSignIn}
-                  className="w-full h-12 bg-surface-container-high rounded-xl flex-row items-center justify-center gap-3 border border-surface-container-highest active:bg-surface-container-highest mb-4"
-                >
-                  <FontAwesome
-                    name="google"
-                    size={18}
-                    color="#4285F4"
-                  />
-                  <Text className="text-sm font-semibold text-on-surface">
-                    Continuar con Google Workspace
-                  </Text>
-                </TouchableOpacity>
+                    {/* Error Banner */}
+                    {errorMessage && (
+                      <View className="mb-4 p-3 rounded-xl bg-status-danger/15 border border-status-danger/30 flex-row items-center gap-2">
+                        <MaterialIcons
+                          name="error-outline"
+                          size={16}
+                          color="#EF4444"
+                        />
+                        <Text className="text-xs text-status-danger flex-1 font-medium">
+                          {errorMessage}
+                        </Text>
+                      </View>
+                    )}
 
-                {/* Divider */}
-                <View className="flex-row items-center justify-center my-3 relative">
-                  <View className="w-full h-[1px] bg-surface-container-highest" />
-                  <Text className="absolute bg-surface-container-low px-3 text-xs font-medium text-on-surface-variant lowercase">
-                    o con credencial de tienda
-                  </Text>
-                </View>
+                    {/* Verification Code Input */}
+                    <View className="gap-1.5 mb-5">
+                      <View className="flex-row justify-between items-center">
+                        <Text className="text-xs font-medium text-on-surface">
+                          Código de Autorización (6 dígitos)
+                        </Text>
+                        {resendCooldown > 0 ? (
+                          <Text className="text-xs text-on-surface-variant">
+                            Reenviar en {resendCooldown}s
+                          </Text>
+                        ) : (
+                          <TouchableOpacity onPress={handleResendMfaCode}>
+                            <Text className="text-xs font-semibold text-primary">
+                              Reenviar código
+                            </Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                      <View className="flex-row items-center bg-surface-container-highest rounded-xl px-3 h-12 border border-surface-container-high">
+                        <MaterialIcons name="dialpad" size={20} color="#c7c4d7" />
+                        <TextInput
+                          value={verificationCode}
+                          onChangeText={setVerificationCode}
+                          placeholder="123456"
+                          placeholderTextColor="#77767e"
+                          keyboardType="number-pad"
+                          maxLength={6}
+                          className="flex-1 text-base font-mono tracking-widest text-on-surface ml-2.5 text-center"
+                        />
+                      </View>
+                    </View>
 
-                {/* Temporarily commented tabs:
-                <View className="bg-surface-container-lowest p-1 rounded-xl flex-row mb-5 border border-surface-container-high/40">
-                  <TouchableOpacity
-                    onPress={() => setAuthMode("email")}
-                    className={`flex-1 py-2 rounded-lg items-center ${
-                      authMode === "email"
-                        ? "bg-surface-container-high border border-surface-container-highest/60"
-                        : ""
-                    }`}
-                  >
-                    <Text
-                      className={`text-xs font-semibold ${
-                        authMode === "email"
-                          ? "text-on-surface"
-                          : "text-on-surface-variant"
-                      }`}
+                    {/* Submit Verification Button */}
+                    <TouchableOpacity
+                      activeOpacity={0.85}
+                      disabled={loading || fetchStatus === "fetching"}
+                      onPress={handleVerifyMfa}
+                      className="w-full h-12 bg-primary-container rounded-xl flex-row items-center justify-center gap-2 shadow-lg shadow-primary-container/30 active:scale-[0.98]"
                     >
-                      Correo Corporativo
-                    </Text>
-                  </TouchableOpacity>
+                      {loading || fetchStatus === "fetching" ? (
+                        <ActivityIndicator size="small" color="#0d0096" />
+                      ) : (
+                        <>
+                          <Text className="text-sm font-bold text-on-primary-container">
+                            Autorizar y Continuar a Terminal
+                          </Text>
+                          <MaterialIcons
+                            name="arrow-forward"
+                            size={18}
+                            color="#0d0096"
+                          />
+                        </>
+                      )}
+                    </TouchableOpacity>
 
-                  <TouchableOpacity
-                    onPress={() => setAuthMode("pin")}
-                    className={`flex-1 py-2 rounded-lg items-center ${
-                      authMode === "pin"
-                        ? "bg-surface-container-high border border-surface-container-highest/60"
-                        : ""
-                    }`}
-                  >
-                    <Text
-                      className={`text-xs font-semibold ${
-                        authMode === "pin"
-                          ? "text-on-surface"
-                          : "text-on-surface-variant"
-                      }`}
+                    {/* Cancel & start over button */}
+                    <TouchableOpacity
+                      onPress={handleCancelMfa}
+                      className="mt-4 py-2 items-center"
                     >
-                      PIN de Cajero (Rápido)
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-                */}
+                      <Text className="text-xs text-on-surface-variant font-medium">
+                        ← Usar otra cuenta o volver
+                      </Text>
+                    </TouchableOpacity>
 
-                {/* Error Banner */}
-                {errorMessage && (
-                  <View className="mb-4 p-3 rounded-xl bg-status-danger/15 border border-status-danger/30 flex-row items-center gap-2">
-                    <MaterialIcons
-                      name="error-outline"
-                      size={16}
-                      color="#EF4444"
-                    />
-                    <Text className="text-xs text-status-danger flex-1 font-medium">
-                      {errorMessage}
+                    <View nativeID="clerk-captcha" />
+                  </View>
+                ) : (
+                  /* Standard Login View */
+                  <View>
+                    {/* Card Title */}
+                    <View className="flex-row items-center justify-between mb-1">
+                      <Text className="text-xl font-bold text-on-surface tracking-tight">
+                        Bienvenido de nuevo
+                      </Text>
+                      <MaterialIcons name="terminal" size={24} color="#c0c1ff" />
+                    </View>
+                    <Text className="text-xs text-on-surface-variant mb-6">
+                      Inicia sesión en tu terminal o espacio de trabajo.
                     </Text>
+
+                    {/* Google Workspace Button */}
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      disabled={loading}
+                      onPress={handleGoogleSignIn}
+                      className="w-full h-12 bg-surface-container-high rounded-xl flex-row items-center justify-center gap-3 border border-surface-container-highest active:bg-surface-container-highest mb-4"
+                    >
+                      <FontAwesome
+                        name="google"
+                        size={18}
+                        color="#4285F4"
+                      />
+                      <Text className="text-sm font-semibold text-on-surface">
+                        Continuar con Google Workspace
+                      </Text>
+                    </TouchableOpacity>
+
+                    {/* Divider */}
+                    <View className="flex-row items-center justify-center my-3 relative">
+                      <View className="w-full h-[1px] bg-surface-container-highest" />
+                      <Text className="absolute bg-surface-container-low px-3 text-xs font-medium text-on-surface-variant lowercase">
+                        o con credencial de tienda
+                      </Text>
+                    </View>
+
+                    {/* Error Banner */}
+                    {errorMessage && (
+                      <View className="mb-4 p-3 rounded-xl bg-status-danger/15 border border-status-danger/30 flex-row items-center gap-2">
+                        <MaterialIcons
+                          name="error-outline"
+                          size={16}
+                          color="#EF4444"
+                        />
+                        <Text className="text-xs text-status-danger flex-1 font-medium">
+                          {errorMessage}
+                        </Text>
+                      </View>
+                    )}
+
+                    {/* Corporate Email Form */}
+                    <View className="gap-4">
+                      <View className="gap-1.5">
+                        <View className="flex-row justify-between items-center">
+                          <Text className="text-xs font-medium text-on-surface">
+                            Correo electrónico
+                          </Text>
+                          <Text className="text-[10px] text-on-surface-variant font-mono">
+                            Enter ↵
+                          </Text>
+                        </View>
+                        <View className="flex-row items-center bg-surface-container-highest rounded-xl px-3 h-11 border border-surface-container-high">
+                          <MaterialIcons name="mail" size={18} color="#c7c4d7" />
+                          <TextInput
+                            value={email}
+                            onChangeText={setEmail}
+                            placeholder="nombre@mitienda.com"
+                            placeholderTextColor="#77767e"
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                            className="flex-1 text-sm text-on-surface ml-2.5"
+                          />
+                        </View>
+                      </View>
+
+                      <View className="gap-1.5">
+                        <View className="flex-row justify-between items-center">
+                          <Text className="text-xs font-medium text-on-surface">
+                            Contraseña
+                          </Text>
+                          <Link href="/forgot-password" asChild>
+                            <TouchableOpacity>
+                              <Text className="text-xs font-medium text-primary">
+                                ¿Olvidaste tu clave?
+                              </Text>
+                            </TouchableOpacity>
+                          </Link>
+                        </View>
+                        <View className="flex-row items-center bg-surface-container-highest rounded-xl px-3 h-11 border border-surface-container-high">
+                          <MaterialIcons name="vpn-key" size={18} color="#c7c4d7" />
+                          <TextInput
+                            value={password}
+                            onChangeText={setPassword}
+                            placeholder="••••••••••••"
+                            placeholderTextColor="#77767e"
+                            secureTextEntry={!showPassword}
+                            className="flex-1 text-sm text-on-surface ml-2.5"
+                          />
+                          <TouchableOpacity
+                            onPress={() => setShowPassword(!showPassword)}
+                          >
+                            <MaterialIcons
+                              name={showPassword ? "visibility-off" : "visibility"}
+                              size={18}
+                              color="#c7c4d7"
+                            />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    </View>
+
+                    {/* Primary Submit Button */}
+                    <TouchableOpacity
+                      activeOpacity={0.85}
+                      disabled={loading || fetchStatus === "fetching"}
+                      onPress={handleAuthSubmit}
+                      className="w-full h-12 bg-primary-container rounded-xl flex-row items-center justify-center gap-2 shadow-lg shadow-primary-container/30 active:scale-[0.98] mt-6"
+                    >
+                      {loading || fetchStatus === "fetching" ? (
+                        <ActivityIndicator size="small" color="#0d0096" />
+                      ) : (
+                        <>
+                          <Text className="text-sm font-bold text-on-primary-container">
+                            Continuar a Terminal
+                          </Text>
+                          <MaterialIcons
+                            name="arrow-forward"
+                            size={18}
+                            color="#0d0096"
+                          />
+                        </>
+                      )}
+                    </TouchableOpacity>
+
+                    <View nativeID="clerk-captcha" />
                   </View>
                 )}
-
-                {/* Corporate Email Form */}
-                <View className="gap-4">
-                  <View className="gap-1.5">
-                    <View className="flex-row justify-between items-center">
-                      <Text className="text-xs font-medium text-on-surface">
-                        Correo electrónico
-                      </Text>
-                      <Text className="text-[10px] text-on-surface-variant font-mono">
-                        Enter ↵
-                      </Text>
-                    </View>
-                    <View className="flex-row items-center bg-surface-container-highest rounded-xl px-3 h-11 border border-surface-container-high">
-                      <MaterialIcons name="mail" size={18} color="#c7c4d7" />
-                      <TextInput
-                        value={email}
-                        onChangeText={setEmail}
-                        placeholder="nombre@mitienda.com"
-                        placeholderTextColor="#77767e"
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                        className="flex-1 text-sm text-on-surface ml-2.5"
-                      />
-                    </View>
-                  </View>
-
-                  <View className="gap-1.5">
-                    <View className="flex-row justify-between items-center">
-                      <Text className="text-xs font-medium text-on-surface">
-                        Contraseña
-                      </Text>
-                      <TouchableOpacity
-                        onPress={() =>
-                          Alert.alert(
-                            "Recuperación",
-                            "Contacta a soporte o al administrador de tu sucursal.",
-                          )
-                        }
-                      >
-                        <Text className="text-xs font-medium text-primary">
-                          ¿Olvidaste tu clave?
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                    <View className="flex-row items-center bg-surface-container-highest rounded-xl px-3 h-11 border border-surface-container-high">
-                      <MaterialIcons name="vpn-key" size={18} color="#c7c4d7" />
-                      <TextInput
-                        value={password}
-                        onChangeText={setPassword}
-                        placeholder="••••••••••••"
-                        placeholderTextColor="#77767e"
-                        secureTextEntry={!showPassword}
-                        className="flex-1 text-sm text-on-surface ml-2.5"
-                      />
-                      <TouchableOpacity
-                        onPress={() => setShowPassword(!showPassword)}
-                      >
-                        <MaterialIcons
-                          name={showPassword ? "visibility-off" : "visibility"}
-                          size={18}
-                          color="#c7c4d7"
-                        />
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </View>
-
-                {/* Commented PIN form for future implementation:
-                <View className="gap-4 items-center">
-                  <View className="w-full flex-row items-center justify-between">
-                    <Text className="text-xs font-medium text-on-surface">
-                      Código de Acceso de Cajero (4 dígitos)
-                    </Text>
-                    <Text className="text-xs font-semibold text-secondary">
-                      Turno Asignado
-                    </Text>
-                  </View>
-
-                  <View className="flex-row justify-center gap-3 py-2 w-full">
-                    {[0, 1, 2, 3].map((idx) => (
-                      <TextInput
-                        key={idx}
-                        value={pin[idx]}
-                        onChangeText={(val) => {
-                          const newPin = [...pin];
-                          newPin[idx] = val.slice(-1);
-                          setPin(newPin);
-                        }}
-                        keyboardType="number-pad"
-                        maxLength={1}
-                        secureTextEntry
-                        className="w-12 h-14 bg-surface-container-highest text-on-surface text-center text-xl font-bold rounded-xl border border-surface-container-high"
-                      />
-                    ))}
-                  </View>
-
-                  <Text className="text-xs text-on-surface-variant text-center">
-                    Usa tu tarjeta de empleado o el teclado numérico rápido.
-                  </Text>
-                </View>
-                */}
-
-                {/* Primary Submit Button */}
-                <TouchableOpacity
-                  activeOpacity={0.85}
-                  disabled={loading || fetchStatus === "fetching"}
-                  onPress={handleAuthSubmit}
-                  className="w-full h-12 bg-primary-container rounded-xl flex-row items-center justify-center gap-2 shadow-lg shadow-primary-container/30 active:scale-[0.98] mt-6"
-                >
-                  {loading || fetchStatus === "fetching" ? (
-                    <ActivityIndicator size="small" color="#0d0096" />
-                  ) : (
-                    <>
-                      <Text className="text-sm font-bold text-on-primary-container">
-                        Continuar a Terminal
-                      </Text>
-                      <MaterialIcons
-                        name="arrow-forward"
-                        size={18}
-                        color="#0d0096"
-                      />
-                    </>
-                  )}
-                </TouchableOpacity>
 
                 {/* Commented station selector for future implementation:
                 <View className="mt-5 bg-surface-container-highest/80 p-3 rounded-xl flex-row items-center justify-between border border-surface-container-high">
