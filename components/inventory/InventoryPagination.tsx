@@ -1,4 +1,5 @@
 import { MaterialIcons } from "@expo/vector-icons";
+import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 
 export interface InventoryPaginationProps {
@@ -14,14 +15,35 @@ export interface InventoryPaginationProps {
 
 export default function InventoryPagination({
   currentPage = 1,
-  totalPages = 15,
-  totalItems = 145,
-  startItem = 1,
-  endItem = 7,
-  rowsPerPage = 10,
+  totalPages = 1,
+  totalItems = 0,
+  startItem,
+  endItem,
+  rowsPerPage = 20,
   onPageChange,
   onRowsPerPageChange,
 }: InventoryPaginationProps) {
+  const safeStart =
+    startItem ?? (totalItems === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1);
+  const safeEnd = endItem ?? Math.min(currentPage * rowsPerPage, totalItems);
+  const safeTotalPages = Math.max(1, totalPages);
+
+  // Generate intelligent visible page numbers
+  const getPageNumbers = (): (number | string)[] => {
+    if (safeTotalPages <= 5) {
+      return Array.from({ length: safeTotalPages }, (_, i) => i + 1);
+    }
+    if (currentPage <= 3) {
+      return [1, 2, 3, "...", safeTotalPages];
+    }
+    if (currentPage >= safeTotalPages - 2) {
+      return [1, "...", safeTotalPages - 2, safeTotalPages - 1, safeTotalPages];
+    }
+    return [1, "...", currentPage, "...", safeTotalPages];
+  };
+
+  const pages = getPageNumbers();
+
   return (
     <View className="p-4 bg-surface-container rounded-b-xl flex-col sm:flex-row items-center justify-between gap-4 border-t border-surface-container-high/40">
       {/* Information & Rows per page */}
@@ -29,7 +51,7 @@ export default function InventoryPagination({
         <Text className="text-xs text-on-surface-variant">
           Mostrando{" "}
           <Text className="text-on-surface font-bold">
-            {startItem} - {endItem}
+            {safeStart} - {safeEnd}
           </Text>{" "}
           de{" "}
           <Text className="text-on-surface font-bold">{totalItems}</Text>{" "}
@@ -37,9 +59,9 @@ export default function InventoryPagination({
         </Text>
 
         <View className="flex-row items-center gap-1.5">
-          <Text className="text-xs text-on-surface-variant">Filas por página:</Text>
+          <Text className="text-xs text-on-surface-variant">Por página:</Text>
           <View className="h-8 px-2.5 rounded bg-surface-container-high items-center justify-center border border-surface-container-highest/40">
-            <Text className="text-xs font-semibold text-on-surface">
+            <Text className="text-xs font-semibold text-on-surface font-mono">
               {rowsPerPage}
             </Text>
           </View>
@@ -62,48 +84,48 @@ export default function InventoryPagination({
         </TouchableOpacity>
 
         <View className="flex-row items-center gap-1">
-          <TouchableOpacity
-            className={`w-9 h-9 rounded-lg items-center justify-center ${
-              currentPage === 1
-                ? "bg-primary text-on-primary font-bold shadow-sm"
-                : "bg-surface-container-high hover:bg-surface-bright"
-            }`}
-          >
-            <Text
-              className={`text-xs font-bold font-mono ${
-                currentPage === 1 ? "text-on-primary" : "text-on-surface"
-              }`}
-            >
-              1
-            </Text>
-          </TouchableOpacity>
+          {pages.map((p, idx) => {
+            if (p === "...") {
+              return (
+                <Text
+                  key={`ellipsis-${idx}`}
+                  className="px-1 text-xs text-on-surface-variant font-mono"
+                >
+                  ...
+                </Text>
+              );
+            }
 
-          <TouchableOpacity className="w-9 h-9 rounded-lg bg-surface-container-high hover:bg-surface-bright items-center justify-center">
-            <Text className="text-xs font-semibold font-mono text-on-surface">
-              2
-            </Text>
-          </TouchableOpacity>
+            const pageNum = Number(p);
+            const isCurrent = pageNum === currentPage;
 
-          <TouchableOpacity className="w-9 h-9 rounded-lg bg-surface-container-high hover:bg-surface-bright items-center justify-center">
-            <Text className="text-xs font-semibold font-mono text-on-surface">
-              3
-            </Text>
-          </TouchableOpacity>
-
-          <Text className="px-1 text-xs text-on-surface-variant">...</Text>
-
-          <TouchableOpacity className="w-9 h-9 rounded-lg bg-surface-container-high hover:bg-surface-bright items-center justify-center">
-            <Text className="text-xs font-semibold font-mono text-on-surface">
-              {totalPages}
-            </Text>
-          </TouchableOpacity>
+            return (
+              <TouchableOpacity
+                key={`page-${pageNum}`}
+                onPress={() => onPageChange?.(pageNum)}
+                className={`w-9 h-9 rounded-lg items-center justify-center ${
+                  isCurrent
+                    ? "bg-primary shadow-sm"
+                    : "bg-surface-container-high hover:bg-surface-bright"
+                }`}
+              >
+                <Text
+                  className={`text-xs font-bold font-mono ${
+                    isCurrent ? "text-on-primary" : "text-on-surface"
+                  }`}
+                >
+                  {pageNum}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         <TouchableOpacity
           onPress={() => onPageChange?.(currentPage + 1)}
-          disabled={currentPage >= totalPages}
+          disabled={currentPage >= safeTotalPages}
           className={`h-9 px-3 rounded-lg flex-row items-center gap-1 border border-surface-container-highest/40 ${
-            currentPage >= totalPages
+            currentPage >= safeTotalPages
               ? "bg-surface-container-high/40 opacity-40"
               : "bg-surface-container-high hover:bg-surface-bright"
           }`}

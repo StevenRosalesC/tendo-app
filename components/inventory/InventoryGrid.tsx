@@ -15,6 +15,9 @@ export interface InventoryGridProps {
   currentPage?: number;
   totalPages?: number;
   totalItems?: number;
+  rowsPerPage?: number;
+  onPageChange?: (page: number) => void;
+  onRowsPerPageChange?: (rows: number) => void;
 }
 
 export default function InventoryGrid({
@@ -27,8 +30,11 @@ export default function InventoryGrid({
   onEditProduct,
   onMoreOptions,
   currentPage = 1,
-  totalPages = 15,
-  totalItems = 145,
+  totalPages = 1,
+  totalItems = 0,
+  rowsPerPage = 20,
+  onPageChange,
+  onRowsPerPageChange,
 }: InventoryGridProps) {
   return (
     <View className="flex-col gap-4">
@@ -53,8 +59,9 @@ export default function InventoryGrid({
           currentPage={currentPage}
           totalPages={totalPages}
           totalItems={totalItems}
-          startItem={1}
-          endItem={products.length}
+          rowsPerPage={rowsPerPage}
+          onPageChange={onPageChange}
+          onRowsPerPageChange={onRowsPerPageChange}
         />
       </View>
     </View>

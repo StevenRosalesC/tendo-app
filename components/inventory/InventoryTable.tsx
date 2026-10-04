@@ -24,6 +24,9 @@ export interface InventoryTableProps {
   currentPage?: number;
   totalPages?: number;
   totalItems?: number;
+  rowsPerPage?: number;
+  onPageChange?: (page: number) => void;
+  onRowsPerPageChange?: (rows: number) => void;
 }
 
 export default function InventoryTable({
@@ -37,8 +40,11 @@ export default function InventoryTable({
   onEditProduct,
   onMoreOptions,
   currentPage = 1,
-  totalPages = 15,
-  totalItems = 145,
+  totalPages = 1,
+  totalItems = 0,
+  rowsPerPage = 20,
+  onPageChange,
+  onRowsPerPageChange,
 }: InventoryTableProps) {
   const allSelected =
     products.length > 0 && products.every((p) => selectedIds.includes(p.id));
@@ -96,8 +102,9 @@ export default function InventoryTable({
         currentPage={currentPage}
         totalPages={totalPages}
         totalItems={totalItems}
-        startItem={1}
-        endItem={products.length}
+        rowsPerPage={rowsPerPage}
+        onPageChange={onPageChange}
+        onRowsPerPageChange={onRowsPerPageChange}
       />
     </View>
   );
