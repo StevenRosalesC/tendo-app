@@ -10,6 +10,9 @@ import {
   View,
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
+import PeripheralCard from "../../../components/dashboard/PeripheralCard";
+import ShortcutBadge from "../../../components/dashboard/ShortcutBadge";
+import TransactionItem from "../../../components/dashboard/TransactionItem";
 
 interface Transaction {
   id: string;
@@ -541,51 +544,7 @@ export default function HomeScreen() {
             {/* Transactions List */}
             <View className="flex-col gap-2 mt-4">
               {filteredTransactions.map((tx) => (
-                <View
-                  key={tx.id}
-                  className="flex-row items-center justify-between p-3 rounded-xl bg-surface-container hover:bg-surface-container-high border border-surface-container-high/40"
-                >
-                  <View className="flex-row items-center gap-3 min-w-0 flex-1 mr-3">
-                    <View className="w-10 h-10 rounded-xl bg-surface-container-highest items-center justify-center shrink-0">
-                      <MaterialIcons
-                        name={tx.iconName}
-                        size={20}
-                        color={tx.iconColor}
-                      />
-                    </View>
-                    <View className="flex-col min-w-0 flex-1">
-                      <View className="flex-row items-center gap-2">
-                        <Text className="text-xs font-bold text-on-surface font-mono">
-                          {tx.ticketNumber}
-                        </Text>
-                        <Text className="text-outline-variant text-[10px]">
-                          •
-                        </Text>
-                        <Text className="text-xs font-medium text-secondary">
-                          {tx.paymentLabel}
-                        </Text>
-                        <Text className="text-outline-variant text-[10px]">
-                          •
-                        </Text>
-                        <Text className="text-xs text-on-surface-variant">
-                          {tx.timeAgo}
-                        </Text>
-                      </View>
-                      <Text className="text-xs text-on-surface-variant truncate mt-0.5">
-                        {tx.productsSummary}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <View className="items-end shrink-0">
-                    <Text className="text-sm font-extrabold text-secondary font-mono">
-                      {tx.amount}
-                    </Text>
-                    <Text className="text-[11px] text-on-surface-variant mt-0.5">
-                      {tx.statusBadge}
-                    </Text>
-                  </View>
-                </View>
+                <TransactionItem key={tx.id} transaction={tx} />
               ))}
             </View>
           </View>
@@ -631,101 +590,38 @@ export default function HomeScreen() {
             </View>
 
             <View className="flex-col gap-2.5">
-              {/* Zebra Scanner */}
-              <View className="flex-row items-center justify-between p-3 rounded-xl bg-surface-container border border-surface-container-high/40">
-                <View className="flex-row items-center gap-2.5">
-                  <View className="w-7 h-7 rounded-lg bg-surface-container-high items-center justify-center">
-                    <MaterialIcons
-                      name="barcode-reader"
-                      size={15}
-                      color="#c0c1ff"
-                    />
-                  </View>
-                  <View className="flex-col">
-                    <Text className="text-xs font-bold text-on-surface">
-                      Zebra DS2208
-                    </Text>
-                    <Text className="text-[10px] text-on-surface-variant">
-                      Lector Código de Barras
-                    </Text>
-                  </View>
-                </View>
-                <View className="px-2 py-0.5 rounded bg-surface-container-high border border-surface-container-highest/60">
-                  <Text className="text-xs font-bold text-secondary">
-                    USB HID
-                  </Text>
-                </View>
-              </View>
-
-              {/* Thermal Printer */}
-              <View className="flex-row items-center justify-between p-3 rounded-xl bg-surface-container border border-surface-container-high/40">
-                <View className="flex-row items-center gap-2.5">
-                  <View className="w-7 h-7 rounded-lg bg-surface-container-high items-center justify-center">
-                    <MaterialIcons name="print" size={15} color="#22d3ee" />
-                  </View>
-                  <View className="flex-col">
-                    <Text className="text-xs font-bold text-on-surface">
-                      Epson TM-T88VI
-                    </Text>
-                    <Text className="text-[10px] text-on-surface-variant">
-                      Impresora Térmica 80mm
-                    </Text>
-                  </View>
-                </View>
-                <View className="px-2 py-0.5 rounded bg-surface-container-high border border-surface-container-highest/60">
-                  <Text className="text-xs font-bold text-secondary">
-                    Papel 92%
-                  </Text>
-                </View>
-              </View>
-
-              {/* Verifone Terminal */}
-              <View className="flex-row items-center justify-between p-3 rounded-xl bg-surface-container border border-surface-container-high/40">
-                <View className="flex-row items-center gap-2.5">
-                  <View className="w-7 h-7 rounded-lg bg-surface-container-high items-center justify-center">
-                    <MaterialIcons
-                      name="contactless"
-                      size={15}
-                      color="#c3c0ff"
-                    />
-                  </View>
-                  <View className="flex-col">
-                    <Text className="text-xs font-bold text-on-surface">
-                      Verifone P400
-                    </Text>
-                    <Text className="text-[10px] text-on-surface-variant">
-                      Terminal Cobro LAN
-                    </Text>
-                  </View>
-                </View>
-                <View className="px-2 py-0.5 rounded bg-surface-container-high border border-surface-container-highest/60">
-                  <Text className="text-xs font-bold text-primary">
-                    NFC Activo
-                  </Text>
-                </View>
-              </View>
-
-              {/* Cash Drawer */}
-              <View className="flex-row items-center justify-between p-3 rounded-xl bg-surface-container border border-surface-container-high/40">
-                <View className="flex-row items-center gap-2.5">
-                  <View className="w-7 h-7 rounded-lg bg-surface-container-high items-center justify-center">
-                    <MaterialIcons name="lock" size={15} color="#908fa0" />
-                  </View>
-                  <View className="flex-col">
-                    <Text className="text-xs font-bold text-on-surface">
-                      Gaveta de Seguridad
-                    </Text>
-                    <Text className="text-[10px] text-on-surface-variant">
-                      Sensor de apertura RJ12
-                    </Text>
-                  </View>
-                </View>
-                <View className="px-2 py-0.5 rounded bg-surface-container-high border border-surface-container-highest/60">
-                  <Text className="text-xs font-medium text-on-surface-variant">
-                    Bloqueo Seguro
-                  </Text>
-                </View>
-              </View>
+              <PeripheralCard
+                name="Zebra DS2208"
+                type="Lector Código de Barras"
+                iconName="qr-code-scanner"
+                iconColor="#c0c1ff"
+                badgeText="USB HID"
+                badgeTextColor="text-secondary"
+              />
+              <PeripheralCard
+                name="Epson TM-T88VI"
+                type="Impresora Térmica 80mm"
+                iconName="print"
+                iconColor="#22d3ee"
+                badgeText="Papel 92%"
+                badgeTextColor="text-secondary"
+              />
+              <PeripheralCard
+                name="Verifone P400"
+                type="Terminal Cobro LAN"
+                iconName="contactless"
+                iconColor="#c3c0ff"
+                badgeText="NFC Activo"
+                badgeTextColor="text-primary"
+              />
+              <PeripheralCard
+                name="Gaveta de Seguridad"
+                type="Sensor de apertura RJ12"
+                iconName="lock"
+                iconColor="#908fa0"
+                badgeText="Bloqueo Seguro"
+                badgeTextColor="text-on-surface-variant"
+              />
             </View>
           </View>
 
@@ -744,43 +640,14 @@ export default function HomeScreen() {
             </View>
 
             <View className="grid grid-cols-2 gap-2 mt-1">
-              <View className="p-3 rounded-xl bg-surface-container border border-surface-container-high/40 flex-row items-center justify-between">
-                <Text className="text-xs text-on-surface-variant">Nueva Venta</Text>
-                <View className="px-2 py-0.5 rounded bg-surface-container-high border border-surface-container-highest">
-                  <Text className="font-mono text-xs font-bold text-primary">
-                    F2
-                  </Text>
-                </View>
-              </View>
-
-              <View className="p-3 rounded-xl bg-surface-container border border-surface-container-high/40 flex-row items-center justify-between">
-                <Text className="text-xs text-on-surface-variant">Buscar Ítem</Text>
-                <View className="px-2 py-0.5 rounded bg-surface-container-high border border-surface-container-highest">
-                  <Text className="font-mono text-xs font-bold text-primary">
-                    F4
-                  </Text>
-                </View>
-              </View>
-
-              <View className="p-3 rounded-xl bg-surface-container border border-surface-container-high/40 flex-row items-center justify-between">
-                <Text className="text-xs text-on-surface-variant">Abrir Gaveta</Text>
-                <View className="px-2 py-0.5 rounded bg-surface-container-high border border-surface-container-highest">
-                  <Text className="font-mono text-xs font-bold text-primary">
-                    F8
-                  </Text>
-                </View>
-              </View>
-
-              <View className="p-3 rounded-xl bg-surface-container border border-surface-container-high/40 flex-row items-center justify-between">
-                <Text className="text-xs text-on-surface-variant">
-                  Cancelar / Salir
-                </Text>
-                <View className="px-2 py-0.5 rounded bg-surface-container-high border border-surface-container-highest">
-                  <Text className="font-mono text-xs font-bold text-status-danger">
-                    ESC
-                  </Text>
-                </View>
-              </View>
+              <ShortcutBadge label="Nueva Venta" shortcut="F2" />
+              <ShortcutBadge label="Buscar Ítem" shortcut="F4" />
+              <ShortcutBadge label="Abrir Gaveta" shortcut="F8" />
+              <ShortcutBadge
+                label="Cancelar / Salir"
+                shortcut="ESC"
+                shortcutColor="text-status-danger"
+              />
             </View>
           </View>
         </View>
