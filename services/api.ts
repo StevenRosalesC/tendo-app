@@ -213,6 +213,40 @@ export const tendoApi = {
       method: "GET",
     });
   },
+
+  /**
+   * Register push device token for current authenticated user and store
+   */
+  registerDeviceToken: (
+    token: string,
+    deviceToken: string,
+    platform: "android" | "ios" | "web",
+  ) => {
+    return apiRequest<{ statusCode: number; message: string }>(
+      "/notifications/devices",
+      token,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          token: deviceToken,
+          platform,
+        }),
+      },
+    );
+  },
+
+  /**
+   * Unregister push device token when logging out
+   */
+  unregisterDeviceToken: (token: string, deviceToken: string) => {
+    return apiRequest<void>(
+      `/notifications/devices/${encodeURIComponent(deviceToken)}`,
+      token,
+      {
+        method: "DELETE",
+      },
+    );
+  },
 };
 
 export default tendoApi;

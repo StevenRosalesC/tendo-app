@@ -11,6 +11,7 @@ import Navigation from "../../components/Navigation";
 import OrderDrawer from "../../components/orders/OrderDrawer";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { usePosSocket } from "../../hooks/usePosSocket";
+import { usePushNotifications } from "../../hooks/usePushNotifications";
 
 export default function AppLayout() {
   const router = useRouter();
@@ -19,6 +20,9 @@ export default function AppLayout() {
   const { user } = useUser();
   const { user: userProfile } = useCurrentUser();
   const { isConnected: isWsConnected } = usePosSocket();
+
+  // Initialize push notifications lifecycle and listeners
+  usePushNotifications();
 
   const [sessionTime, setSessionTime] = useState<string>("04:22:18");
 
