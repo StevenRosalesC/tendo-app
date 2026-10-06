@@ -1,24 +1,13 @@
-import { MaterialIcons } from "@expo/vector-icons";
-import ModulePlaceholder from "../../../components/dashboard/ModulePlaceholder";
-import Button from "../../../components/ui/Button";
+import React from "react";
+import { View } from "react-native";
+import TerminalCart from "../../../components/terminal/TerminalCart";
 
 export default function TerminalScreen() {
   return (
-    <ModulePlaceholder
-      iconName="point-of-sale"
-      iconColor="#0d0096"
-      iconBgColor="bg-primary-container"
-      title="Terminal de Cobro Rápido"
-      description="Punto de venta activo. Escaneo de códigos de barra, cobro con tarjeta contactless y efectivo."
-    >
-      <Button
-        label="Escanear Código / Nuevo Ticket"
-        leftIcon={
-          <MaterialIcons name="qr-code-scanner" size={20} color="#0d0096" />
-        }
-        fullWidth
-        className="mt-6"
-      />
-    </ModulePlaceholder>
+    <View className="flex-1 bg-surface p-3 sm:p-5 lg:p-6 items-center justify-center">
+      <View className="w-full max-w-2xl flex-1 flex-col">
+        <TerminalCart />
+      </View>
+    </View>
   );
 }

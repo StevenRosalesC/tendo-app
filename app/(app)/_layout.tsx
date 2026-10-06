@@ -8,6 +8,7 @@ import DesktopHeader from "../../components/layout/DesktopHeader";
 import DesktopSidebar from "../../components/layout/DesktopSidebar";
 import MobileHeader from "../../components/layout/MobileHeader";
 import Navigation from "../../components/Navigation";
+import OrderDrawer from "../../components/orders/OrderDrawer";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { usePosSocket } from "../../hooks/usePosSocket";
 
@@ -121,6 +122,9 @@ export default function AppLayout() {
           </View>
         </View>
       </View>
+
+      {/* 5. Global Left-to-Right Order Drawer */}
+      <OrderDrawer />
     </SafeAreaView>
   );
 }
