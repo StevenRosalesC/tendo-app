@@ -11,6 +11,7 @@ import {
 export interface InputProps extends TextInputProps {
   label?: string;
   rightLabel?: ReactNode;
+  rightElement?: ReactNode;
   iconName?: keyof typeof MaterialIcons.glyphMap;
   iconColor?: string;
   isPassword?: boolean;
@@ -23,6 +24,7 @@ export interface InputProps extends TextInputProps {
 export default function Input({
   label,
   rightLabel,
+  rightElement,
   iconName,
   iconColor = "#c7c4d7",
   isPassword = false,
@@ -71,6 +73,8 @@ export default function Input({
           } ${inputClassName}`}
           {...textInputProps}
         />
+
+        {rightElement}
 
         {isPassword && (
           <TouchableOpacity

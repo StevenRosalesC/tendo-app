@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import tendoApi from "../../services/api";
 import AlertBanner from "../ui/AlertBanner";
+import BarcodeScanner from "../ui/BarcodeScanner";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
 import Modal from "../ui/Modal";
@@ -34,8 +35,9 @@ export default function ProductFormModal({
   const [price, setPrice] = useState<string>("");
   const [stock, setStock] = useState<string>("0");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isScannerOpen, setIsScannerOpen] = useState<boolean>(false);
 
-  // Sync form when productToEdit changes
+  // Sync form when productToEdit changes or modal visibility changes
   useEffect(() => {
     if (productToEdit) {
       setName(productToEdit.name || "");
@@ -49,7 +51,17 @@ export default function ProductFormModal({
       setStock("0");
     }
     setErrorMessage(null);
+    setIsScannerOpen(false);
   }, [productToEdit, visible]);
+
+  // Handle barcode captured from camera scanner
+  const handleScanBarcode = (scannedBarcode: string) => {
+    setBarcode(scannedBarcode.trim());
+    setIsScannerOpen(false);
+    if (errorMessage) {
+      setErrorMessage(null);
+    }
+  };
 
   // Generate random valid EAN-13 format barcode for quick tests
   const handleGenerateBarcode = () => {
@@ -153,7 +165,44 @@ export default function ProductFormModal({
           autoCapitalize="words"
         />
 
-        {/* Barcode & Generator Button */}
+        {/* Inline Camera Barcode Scanner Viewfinder */}
+        {isScannerOpen && (
+          <View className="overflow-hidden rounded-2xl border border-primary/50 bg-surface-container-high shadow-lg">
+            <View className="flex-row items-center justify-between p-3 bg-surface-container-highest/80 border-b border-surface-container-highest">
+              <View className="flex-row items-center gap-2">
+                <View className="w-6 h-6 rounded-md bg-primary/20 items-center justify-center">
+                  <MaterialIcons name="qr-code-scanner" size={14} color="#c0c1ff" />
+                </View>
+                <Text className="text-xs font-bold text-on-surface">
+                  Lector de Código de Barras Activo
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                onPress={() => setIsScannerOpen(false)}
+                activeOpacity={0.7}
+                className="p-1 rounded-full bg-surface-container items-center justify-center"
+              >
+                <MaterialIcons name="close" size={16} color="#c7c4d7" />
+              </TouchableOpacity>
+            </View>
+
+            <BarcodeScanner
+              onScan={handleScanBarcode}
+              isActive={isScannerOpen}
+              height={220}
+              cooldownMs={1000}
+            />
+
+            <View className="p-2.5 bg-surface-container-highest/60 items-center border-t border-surface-container-highest">
+              <Text className="text-[11px] text-on-surface-variant text-center">
+                Apunta al código para asignarlo automáticamente a este producto
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {/* Barcode & Actions (Scanner & Generator) */}
         <View className="gap-1.5">
           <Input
             label="Código de Barras (EAN / UPC / SKU)"
@@ -162,20 +211,64 @@ export default function ProductFormModal({
             onChangeText={setBarcode}
             placeholder="7501031311309"
             keyboardType="number-pad"
-            rightLabel={
+            rightElement={
               <TouchableOpacity
-                onPress={handleGenerateBarcode}
-                className="bg-surface-container-high px-2.5 py-1 rounded-lg border border-surface-container-highest/60 flex-row items-center gap-1"
+                onPress={() => setIsScannerOpen((prev) => !prev)}
+                activeOpacity={0.7}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                className={`p-1.5 rounded-lg border ${
+                  isScannerOpen
+                    ? "bg-primary border-primary"
+                    : "bg-surface-container-high border-surface-container-highest active:bg-primary/20"
+                }`}
               >
-                <MaterialIcons name="auto-fix-high" size={14} color="#c0c1ff" />
-                <Text className="text-[11px] font-semibold text-primary">
-                  Generar
-                </Text>
+                <MaterialIcons
+                  name="photo-camera"
+                  size={16}
+                  color={isScannerOpen ? "#0d0096" : "#c0c1ff"}
+                />
               </TouchableOpacity>
+            }
+            rightLabel={
+              <View className="flex-row items-center gap-1.5">
+                <TouchableOpacity
+                  onPress={() => setIsScannerOpen((prev) => !prev)}
+                  activeOpacity={0.7}
+                  className={`px-2.5 py-1 rounded-lg border flex-row items-center gap-1 ${
+                    isScannerOpen
+                      ? "bg-primary border-primary"
+                      : "bg-primary/20 border-primary/40 active:bg-primary/30"
+                  }`}
+                >
+                  <MaterialIcons
+                    name={isScannerOpen ? "videocam-off" : "camera-alt"}
+                    size={13}
+                    color={isScannerOpen ? "#0d0096" : "#c0c1ff"}
+                  />
+                  <Text
+                    className={`text-[11px] font-semibold ${
+                      isScannerOpen ? "text-[#0d0096]" : "text-primary"
+                    }`}
+                  >
+                    {isScannerOpen ? "Cerrar Cámara" : "Escanear"}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={handleGenerateBarcode}
+                  activeOpacity={0.7}
+                  className="bg-surface-container-high px-2.5 py-1 rounded-lg border border-surface-container-highest/60 flex-row items-center gap-1 active:bg-surface-container-highest"
+                >
+                  <MaterialIcons name="auto-fix-high" size={13} color="#c7c4d7" />
+                  <Text className="text-[11px] font-semibold text-on-surface-variant">
+                    Generar
+                  </Text>
+                </TouchableOpacity>
+              </View>
             }
           />
           <Text className="text-[11px] text-on-surface-variant">
-            Compatible con lectores láser USB/Bluetooth y cámara de terminal POS.
+            Compatible con lectores láser USB/Bluetooth y la cámara del dispositivo.
           </Text>
         </View>
 
