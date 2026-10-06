@@ -31,8 +31,12 @@ export function Table({
 }: TableProps) {
   const content = (
     <View
-      style={minWidth ? { minWidth: minWidth as any } : undefined}
-      className={`w-full flex-col ${className}`}
+      style={{
+        width: "100%",
+        minWidth: minWidth as any,
+        flexGrow: 1,
+      }}
+      className={`w-full flex-1 flex-col ${className}`}
       {...props}
     >
       {children}
@@ -44,7 +48,12 @@ export function Table({
       className={`w-full rounded-xl bg-surface-container-low border border-surface-container-high/60 overflow-hidden shadow-sm ${containerClassName}`}
     >
       {horizontalScroll ? (
-        <ScrollView horizontal showsHorizontalScrollIndicator={true}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={true}
+          style={{ width: "100%" }}
+          contentContainerStyle={{ minWidth: "100%", flexGrow: 1 }}
+        >
           {content}
         </ScrollView>
       ) : (
@@ -66,11 +75,13 @@ export interface TableHeaderProps extends ViewProps {
 export function TableHeader({
   children,
   className = "",
+  style,
   ...props
 }: TableHeaderProps) {
   return (
     <View
       className={`w-full bg-surface-container border-b border-surface-container-high/60 ${className}`}
+      style={[{ width: "100%" }, style]}
       {...props}
     >
       {children}
@@ -90,10 +101,15 @@ export interface TableBodyProps extends ViewProps {
 export function TableBody({
   children,
   className = "",
+  style,
   ...props
 }: TableBodyProps) {
   return (
-    <View className={`w-full flex-col ${className}`} {...props}>
+    <View
+      className={`w-full flex-col ${className}`}
+      style={[{ width: "100%" }, style]}
+      {...props}
+    >
       {children}
     </View>
   );
@@ -143,9 +159,10 @@ export function TableRow({
   isSelected = false,
   isAlternate = false,
   interactive = false,
+  style,
   ...props
 }: TableRowProps) {
-  const baseClasses = `flex-row items-center py-3 px-4 border-b border-surface-container-high/30 ${
+  const baseClasses = `w-full flex-row items-center py-3 px-4 border-b border-surface-container-high/30 ${
     isHeader
       ? "bg-surface-container border-b border-surface-container-high/60"
       : isSelected
@@ -157,14 +174,23 @@ export function TableRow({
 
   if (interactive) {
     return (
-      <TouchableOpacity activeOpacity={0.8} className={baseClasses} {...props}>
+      <TouchableOpacity
+        activeOpacity={0.8}
+        className={baseClasses}
+        style={[{ width: "100%" }, style]}
+        {...props}
+      >
         {children}
       </TouchableOpacity>
     );
   }
 
   return (
-    <View className={baseClasses} {...(props as ViewProps)}>
+    <View
+      className={baseClasses}
+      style={[{ width: "100%" }, style]}
+      {...(props as ViewProps)}
+    >
       {children}
     </View>
   );
