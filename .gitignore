@@ -33,6 +33,7 @@ yarn-error.*
 # local env files
 .env
 .env*.local
+.env.preview
 
 # typescript
 *.tsbuildinfo
@@ -46,3 +47,4 @@ dev_docs/
 docs/
 
 google-services.json
+*.apk
