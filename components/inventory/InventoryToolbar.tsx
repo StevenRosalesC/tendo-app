@@ -10,6 +10,7 @@ import {
 export interface InventoryToolbarProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
+  onScanPress?: () => void;
   inStock?: boolean;
   onInStockChange: (inStock?: boolean) => void;
   viewMode: "table" | "grid";
@@ -19,24 +20,36 @@ export interface InventoryToolbarProps {
 export default function InventoryToolbar({
   searchQuery,
   onSearchChange,
+  onScanPress,
   inStock,
   onInStockChange,
   viewMode,
   onViewModeChange,
 }: InventoryToolbarProps) {
   return (
-    <View className="p-4 rounded-xl bg-surface-container-low border border-surface-container-high/60 flex-col gap-4 shadow-sm">
+    <View className="p-3 sm:p-4 rounded-2xl bg-surface-container-low border border-surface-container-high/60 flex-col gap-3 sm:gap-4 shadow-sm">
       <View className="flex-col md:flex-row items-stretch md:items-center gap-3 justify-between">
         {/* Barcode / Name API Search Input */}
-        <View className="relative flex-1 max-w-xl flex-row items-center bg-surface-container-high rounded-lg px-3 h-11 border border-surface-container-highest/60 focus-within:border-primary">
-          <MaterialIcons name="qr-code-scanner" size={20} color="#c7c4d7" />
+        <View
+          style={{ minHeight: 44 }}
+          className="relative w-full md:w-auto md:flex-1 max-w-xl flex-row items-center bg-surface-container-high rounded-lg px-3 h-11 border border-surface-container-highest/60"
+        >
+          <TouchableOpacity
+            onPress={onScanPress}
+            activeOpacity={0.7}
+            className="p-1 -ml-1 mr-1 rounded-md hover:bg-surface-container-highest/60 items-center justify-center"
+            accessibilityLabel="Escanear código de barras para buscar"
+          >
+            <MaterialIcons name="qr-code-scanner" size={20} color="#c0c1ff" />
+          </TouchableOpacity>
           <TextInput
             id="pos-inventory-search"
             value={searchQuery}
             onChangeText={onSearchChange}
-            placeholder="Buscar por nombre o código de barras... [F4]"
+            placeholder="Buscar por nombre o código..."
             placeholderTextColor="#77767e"
-            className="flex-1 text-sm text-on-surface ml-2.5 h-full"
+            className="flex-1 text-sm text-on-surface ml-1.5 py-0 h-11"
+            style={{ minHeight: 40 }}
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity
@@ -46,7 +59,7 @@ export default function InventoryToolbar({
               <MaterialIcons name="close" size={16} color="#c7c4d7" />
             </TouchableOpacity>
           )}
-          <View className="flex-row items-center gap-1.5 ml-1">
+          <View className="hidden sm:flex flex-row items-center gap-1.5 ml-1">
             <View className="px-2 py-0.5 rounded bg-surface-container">
               <Text className="text-xs font-semibold text-on-surface-variant font-mono">
                 F4

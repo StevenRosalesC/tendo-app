@@ -28,7 +28,7 @@ export default function InventoryGridItem({
 
   return (
     <View
-      className={`rounded-xl bg-surface-container border p-3 flex-col justify-between shadow-sm relative overflow-hidden ${
+      className={`rounded-2xl bg-surface-container border p-3 flex-col justify-between shadow-sm relative overflow-hidden min-h-[220px] ${
         isSelected
           ? "border-primary"
           : isLowStock

@@ -16,7 +16,7 @@ const defaultShortcuts: ShortcutItem[] = [
 
 export default function InventoryShortcutsBar() {
   return (
-    <View className="py-2.5 px-4 rounded-xl bg-surface-container border border-surface-container-high/40 flex-row flex-wrap items-center justify-between gap-3 shadow-xs">
+    <View className="hidden md:flex py-2.5 px-4 rounded-xl bg-surface-container border border-surface-container-high/40 flex-row flex-wrap items-center justify-between gap-3 shadow-xs">
       <View className="flex-row items-center gap-2">
         <MaterialIcons name="keyboard" size={18} color="#c0c1ff" />
         <Text className="text-xs font-semibold text-on-surface">

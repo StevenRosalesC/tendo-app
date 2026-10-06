@@ -45,9 +45,9 @@ export default function InventoryPagination({
   const pages = getPageNumbers();
 
   return (
-    <View className="p-4 bg-surface-container rounded-b-xl flex-col sm:flex-row items-center justify-between gap-4 border-t border-surface-container-high/40">
+    <View className="p-3 sm:p-4 bg-surface-container rounded-b-xl flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 border-t border-surface-container-high/40">
       {/* Information & Rows per page */}
-      <View className="flex-row items-center gap-4 text-on-surface-variant flex-wrap">
+      <View className="flex-row items-center justify-between sm:justify-start gap-3 sm:gap-4 text-on-surface-variant flex-wrap w-full sm:w-auto">
         <Text className="text-xs text-on-surface-variant">
           Mostrando{" "}
           <Text className="text-on-surface font-bold">
@@ -60,7 +60,7 @@ export default function InventoryPagination({
 
         <View className="flex-row items-center gap-1.5">
           <Text className="text-xs text-on-surface-variant">Por página:</Text>
-          <View className="h-8 px-2.5 rounded bg-surface-container-high items-center justify-center border border-surface-container-highest/40">
+          <View className="h-7 sm:h-8 px-2 sm:px-2.5 rounded bg-surface-container-high items-center justify-center border border-surface-container-highest/40">
             <Text className="text-xs font-semibold text-on-surface font-mono">
               {rowsPerPage}
             </Text>
@@ -69,18 +69,21 @@ export default function InventoryPagination({
       </View>
 
       {/* Page Navigation Buttons */}
-      <View className="flex-row items-center gap-1.5">
+      <View className="flex-row items-center gap-1 sm:gap-1.5">
         <TouchableOpacity
           onPress={() => onPageChange?.(currentPage - 1)}
           disabled={currentPage <= 1}
-          className={`h-9 px-3 rounded-lg flex-row items-center gap-1 border border-surface-container-highest/40 ${
+          accessibilityLabel="Página anterior"
+          className={`h-8 sm:h-9 px-2 sm:px-3 rounded-lg flex-row items-center gap-1 border border-surface-container-highest/40 ${
             currentPage <= 1
               ? "bg-surface-container-high/40 opacity-40"
               : "bg-surface-container-high hover:bg-surface-bright"
           }`}
         >
           <MaterialIcons name="chevron-left" size={16} color="#c7c4d7" />
-          <Text className="text-xs font-medium text-on-surface">Anterior</Text>
+          <Text className="text-xs font-medium text-on-surface hidden sm:inline">
+            Anterior
+          </Text>
         </TouchableOpacity>
 
         <View className="flex-row items-center gap-1">
@@ -103,7 +106,7 @@ export default function InventoryPagination({
               <TouchableOpacity
                 key={`page-${pageNum}`}
                 onPress={() => onPageChange?.(pageNum)}
-                className={`w-9 h-9 rounded-lg items-center justify-center ${
+                className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg items-center justify-center ${
                   isCurrent
                     ? "bg-primary shadow-sm"
                     : "bg-surface-container-high hover:bg-surface-bright"
@@ -124,13 +127,16 @@ export default function InventoryPagination({
         <TouchableOpacity
           onPress={() => onPageChange?.(currentPage + 1)}
           disabled={currentPage >= safeTotalPages}
-          className={`h-9 px-3 rounded-lg flex-row items-center gap-1 border border-surface-container-highest/40 ${
+          accessibilityLabel="Página siguiente"
+          className={`h-8 sm:h-9 px-2 sm:px-3 rounded-lg flex-row items-center gap-1 border border-surface-container-highest/40 ${
             currentPage >= safeTotalPages
               ? "bg-surface-container-high/40 opacity-40"
               : "bg-surface-container-high hover:bg-surface-bright"
           }`}
         >
-          <Text className="text-xs font-medium text-on-surface">Siguiente</Text>
+          <Text className="text-xs font-medium text-on-surface hidden sm:inline">
+            Siguiente
+          </Text>
           <MaterialIcons name="chevron-right" size={16} color="#c7c4d7" />
         </TouchableOpacity>
       </View>

@@ -38,19 +38,20 @@ export default function InventoryGrid({
 }: InventoryGridProps) {
   return (
     <View className="flex-col gap-4">
-      <View className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+      <View className="flex-row flex-wrap -m-2">
         {products.map((product) => (
-          <InventoryGridItem
-            key={product.id}
-            product={product}
-            isSelected={selectedIds.includes(product.id)}
-            onToggleSelect={onToggleSelect}
-            onToggleAvailability={onToggleAvailability}
-            onQuickAddStock={onQuickAddStock}
-            onPrintBarcode={onPrintBarcode}
-            onEditProduct={onEditProduct}
-            onMoreOptions={onMoreOptions}
-          />
+          <View key={product.id} className="w-full sm:w-1/2 md:w-1/3 xl:w-1/4 p-2">
+            <InventoryGridItem
+              product={product}
+              isSelected={selectedIds.includes(product.id)}
+              onToggleSelect={onToggleSelect}
+              onToggleAvailability={onToggleAvailability}
+              onQuickAddStock={onQuickAddStock}
+              onPrintBarcode={onPrintBarcode}
+              onEditProduct={onEditProduct}
+              onMoreOptions={onMoreOptions}
+            />
+          </View>
         ))}
       </View>
 

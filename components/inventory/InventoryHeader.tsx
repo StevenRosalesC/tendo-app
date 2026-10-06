@@ -1,5 +1,6 @@
 import { MaterialIcons } from "@expo/vector-icons";
-import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+import React from "react";
+import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 export interface InventoryHeaderProps {
   totalProducts?: number;
@@ -21,107 +22,108 @@ export default function InventoryHeader({
   isRefreshing = false,
 }: InventoryHeaderProps) {
   return (
-    <View className="flex-col lg:flex-row lg:items-center justify-between gap-4">
-      {/* Title & Stats */}
-      <View className="flex-col gap-1">
-        <View className="flex-row items-center gap-2 flex-wrap">
-          <Text className="text-2xl sm:text-3xl font-bold text-on-surface tracking-tight">
-            Catálogo de Productos e Inventario
-          </Text>
-          <View className="px-2.5 py-0.5 rounded-full bg-surface-container-high">
-            <Text className="text-xs font-medium text-on-surface-variant">
-              {totalProducts} Productos Totales
+    <View className="flex-col gap-2.5 sm:gap-4">
+      {/* Top Row: Title, Pill & Primary CTA */}
+      <View className="flex-col sm:flex-row sm:items-center justify-between gap-3">
+        {/* Title & Product Count */}
+        <View className="flex-col gap-0.5">
+          <View className="flex-row items-center gap-2 flex-wrap">
+            <Text className="text-xl sm:text-2xl lg:text-3xl font-bold text-on-surface tracking-tight">
+              Inventario de Productos
             </Text>
-          </View>
-          {totalCategories !== undefined && (
-            <View className="px-2.5 py-0.5 rounded-full bg-surface-container-high">
-              <Text className="text-xs font-medium text-on-surface-variant">
-                {totalCategories} Categorías
+            <View className="px-2 py-0.5 rounded-full bg-surface-container-high">
+              <Text className="text-[11px] sm:text-xs font-semibold text-on-surface-variant font-mono">
+                {totalProducts} {totalProducts === 1 ? "artículo" : "artículos"}
               </Text>
             </View>
-          )}
-        </View>
-        <Text className="text-xs sm:text-sm text-on-surface-variant">
-          Gestión centralizada de stock multicanal, márgenes operativos y sincronización en mostrador
-        </Text>
-      </View>
-
-      {/* Action Group */}
-      <View className="flex-row items-center gap-2 flex-wrap">
-        {/* Omnichannel Sync Pill */}
-        <View className="flex-row items-center gap-2 px-3 py-2 rounded-lg bg-surface-container-high border border-surface-container-highest/40">
-          <View className="w-2 h-2 rounded-full bg-secondary" />
-          <Text className="text-xs font-medium text-on-surface">
-            Sincronizado:
-          </Text>
-          <View className="flex-row items-center gap-1">
-            <Text className="text-xs text-on-surface-variant">Tienda POS</Text>
-            <Text className="text-xs text-on-surface-variant">•</Text>
-            <Text className="text-xs text-on-surface-variant">Shopify</Text>
-            <Text className="text-xs text-on-surface-variant">•</Text>
-            <Text className="text-xs text-on-surface-variant">ML</Text>
-          </View>
-        </View>
-
-        {/* Refresh Button */}
-        {onRefresh && (
-          <TouchableOpacity
-            onPress={onRefresh}
-            disabled={isRefreshing}
-            activeOpacity={0.8}
-            className="h-10 px-3.5 rounded-lg bg-surface-container-high border border-surface-container-highest/60 hover:bg-surface-bright flex-row items-center gap-2 shadow-sm"
-          >
-            {isRefreshing ? (
-              <ActivityIndicator size="small" color="#c0c1ff" />
-            ) : (
-              <MaterialIcons name="refresh" size={18} color="#c7c4d7" />
+            {totalCategories !== undefined && (
+              <View className="hidden sm:flex px-2 py-0.5 rounded-full bg-surface-container-high">
+                <Text className="text-xs font-medium text-on-surface-variant">
+                  {totalCategories} categorías
+                </Text>
+              </View>
             )}
-            <Text className="text-sm font-semibold text-on-surface">
-              {isRefreshing ? "Actualizando..." : "Refrescar"}
+          </View>
+
+          <Text className="text-xs text-on-surface-variant hidden sm:flex">
+            Gestión centralizada de existencias, precios y sincronización de mostrador.
+          </Text>
+        </View>
+
+        {/* Primary Action Button (Nuevo Producto) */}
+        {onNewProduct && (
+          <TouchableOpacity
+            onPress={onNewProduct}
+            activeOpacity={0.85}
+            className="h-10 px-3.5 sm:px-4 rounded-xl bg-primary-container shadow-sm flex-row items-center justify-center gap-2 active:scale-95 shrink-0"
+          >
+            <MaterialIcons name="add" size={18} color="#0d0096" />
+            <Text className="text-xs sm:text-sm font-bold text-on-primary-container">
+              Nuevo Producto
             </Text>
+            <View className="hidden sm:flex ml-0.5 px-1.5 py-0.2 rounded bg-on-primary-container/15">
+              <Text className="text-[10px] font-mono font-bold text-on-primary-container">
+                F3
+              </Text>
+            </View>
           </TouchableOpacity>
         )}
+      </View>
 
-        {/* Quick Stock Adjust Button */}
-        <TouchableOpacity
-          onPress={onQuickAdjust}
-          activeOpacity={0.8}
-          className="h-10 px-3.5 rounded-lg bg-surface-container-high border border-surface-container-highest/60 hover:bg-surface-bright flex-row items-center gap-2 shadow-sm"
+      {/* Secondary Actions: Quick Adjust, Import/Export, Refresh */}
+      <View className="w-full">
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerClassName="flex-row items-center gap-2 py-0.5"
         >
-          <MaterialIcons name="tune" size={18} color="#c7c4d7" />
-          <Text className="text-sm font-semibold text-on-surface">
-            Ajuste Rápido
-          </Text>
-        </TouchableOpacity>
+          {/* Refresh Button */}
+          {onRefresh && (
+            <TouchableOpacity
+              onPress={onRefresh}
+              disabled={isRefreshing}
+              activeOpacity={0.8}
+              className="h-8 sm:h-9 px-2.5 sm:px-3 rounded-lg sm:rounded-xl bg-surface-container-high border border-surface-container-highest/60 hover:bg-surface-bright flex-row items-center gap-1.5 shadow-xs"
+            >
+              {isRefreshing ? (
+                <ActivityIndicator size="small" color="#c0c1ff" />
+              ) : (
+                <MaterialIcons name="refresh" size={15} color="#c7c4d7" />
+              )}
+              <Text className="text-xs font-semibold text-on-surface">
+                {isRefreshing ? "..." : "Refrescar"}
+              </Text>
+            </TouchableOpacity>
+          )}
 
-        {/* Import / Export CSV */}
-        <TouchableOpacity
-          onPress={onImportExport}
-          activeOpacity={0.8}
-          className="h-10 px-3.5 rounded-lg bg-surface-container-high border border-surface-container-highest/60 hover:bg-surface-bright flex-row items-center gap-2 shadow-sm"
-        >
-          <MaterialIcons name="swap-vert" size={18} color="#c7c4d7" />
-          <Text className="text-sm font-semibold text-on-surface">
-            Importar / Exportar
-          </Text>
-        </TouchableOpacity>
+          {/* Quick Stock Adjust Button */}
+          {onQuickAdjust && (
+            <TouchableOpacity
+              onPress={onQuickAdjust}
+              activeOpacity={0.8}
+              className="h-8 sm:h-9 px-2.5 sm:px-3 rounded-lg sm:rounded-xl bg-surface-container-high border border-surface-container-highest/60 hover:bg-surface-bright flex-row items-center gap-1.5 shadow-xs"
+            >
+              <MaterialIcons name="tune" size={15} color="#c7c4d7" />
+              <Text className="text-xs font-semibold text-on-surface">
+                Ajuste Rápido
+              </Text>
+            </TouchableOpacity>
+          )}
 
-        {/* Primary Action: Nuevo Producto */}
-        <TouchableOpacity
-          onPress={onNewProduct}
-          activeOpacity={0.85}
-          className="h-10 px-4 rounded-lg bg-primary-container shadow-md flex-row items-center gap-2 active:scale-95"
-        >
-          <MaterialIcons name="add" size={20} color="#0d0096" />
-          <Text className="text-sm font-bold text-on-primary-container">
-            Nuevo Producto
-          </Text>
-          <View className="ml-1 px-1.5 py-0.5 rounded bg-on-primary-container/15">
-            <Text className="text-xs font-semibold text-on-primary-container">
-              F3
-            </Text>
-          </View>
-        </TouchableOpacity>
+          {/* Import / Export CSV */}
+          {onImportExport && (
+            <TouchableOpacity
+              onPress={onImportExport}
+              activeOpacity={0.8}
+              className="h-8 sm:h-9 px-2.5 sm:px-3 rounded-lg sm:rounded-xl bg-surface-container-high border border-surface-container-highest/60 hover:bg-surface-bright flex-row items-center gap-1.5 shadow-xs"
+            >
+              <MaterialIcons name="swap-vert" size={15} color="#c7c4d7" />
+              <Text className="text-xs font-semibold text-on-surface">
+                Importar / Exportar
+              </Text>
+            </TouchableOpacity>
+          )}
+        </ScrollView>
       </View>
     </View>
   );

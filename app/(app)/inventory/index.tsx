@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { MaterialIcons } from "@expo/vector-icons";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -7,6 +8,7 @@ import {
   ScrollView,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 
@@ -20,9 +22,9 @@ import ProductDetailModal from "../../../components/inventory/ProductDetailModal
 import ProductFormModal from "../../../components/inventory/ProductFormModal";
 import StockAdjustModal from "../../../components/inventory/StockAdjustModal";
 import DeleteProductModal from "../../../components/inventory/DeleteProductModal";
+import { BarcodeScannerModal } from "../../../components/ui/BarcodeScanner";
 import {
   initialKpis,
-  initialProducts,
 } from "../../../components/inventory/mockData";
 import { Product } from "../../../components/inventory/types";
 import { useAuth } from "@clerk/expo";
@@ -31,12 +33,26 @@ import tendoApi, { PaginationMeta } from "@/services/api";
 
 export default function InventoryScreen() {
   const { getToken } = useAuth();
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const { width: windowWidth } = useWindowDimensions();
+  const isMobile = windowWidth > 0 && windowWidth < 768;
+  const isInitialMount = useRef(true);
+
+  const [availabilityOverrides, setAvailabilityOverrides] = useState<
+    Record<string, boolean>
+  >({});
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [debouncedSearch, setDebouncedSearch] = useState<string>("");
   const [inStockOnly, setInStockOnly] = useState<boolean | undefined>(undefined);
-  const [viewMode, setViewMode] = useState<"table" | "grid">("table");
+  const [viewMode, setViewMode] = useState<"table" | "grid">(isMobile ? "grid" : "table");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  // Default to grid on mobile on first mount
+  useEffect(() => {
+    if (isInitialMount.current && isMobile) {
+      isInitialMount.current = false;
+      setViewMode("grid");
+    }
+  }, [isMobile]);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -66,6 +82,14 @@ export default function InventoryScreen() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
   const [selectedDetailProduct, setSelectedDetailProduct] =
     useState<Product | null>(null);
+  const [isScannerModalOpen, setIsScannerModalOpen] = useState<boolean>(false);
+
+  const handleScanBarcode = (barcode: string) => {
+    setSearchQuery(barcode);
+    setDebouncedSearch(barcode);
+    setCurrentPage(1);
+    setIsScannerModalOpen(false);
+  };
 
   const {
     data: productsResponse,
@@ -113,43 +137,44 @@ export default function InventoryScreen() {
           hasPreviousPage: false,
         };
 
-  // Sync backend products when fetched
-  useEffect(() => {
-    if (productsResponse) {
-      if (rawProducts.length > 0) {
-        const mapped: Product[] = rawProducts.map((p: any) => ({
-          id: p.id,
-          name: p.name,
-          sku: `SKU-${p.barcode ? p.barcode.slice(-4) : "0000"}`,
-          barcode: p.barcode,
-          category: "General",
-          stock: p.stock ?? 0,
-          stockWarning:
-            (p.stock ?? 0) <= 0
-              ? "out_of_stock"
-              : (p.stock ?? 0) <= 5
-              ? "low_stock"
-              : null,
-          stockWarningText:
-            (p.stock ?? 0) <= 0
-              ? "Agotado"
-              : (p.stock ?? 0) <= 5
-              ? "Bajo Stock"
-              : undefined,
-          price: Number(p.price) || 0,
-          cost: Math.round((Number(p.price) || 0) * 0.65),
-          margin: 35,
-          channels: ["POS", "Web"],
-          available: (p.stock ?? 0) > 0,
-          imageUrl:
-            "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120&auto=format&fit=crop&q=80",
-        }));
-        setProducts(mapped);
-      } else {
-        setProducts([]);
-      }
-    }
-  }, [productsResponse]);
+  // Derived products from backend response with local availability overrides
+  const products: Product[] = useMemo(() => {
+    if (!rawProducts || rawProducts.length === 0) return [];
+    return rawProducts.map((p: any) => {
+      const isAvailable =
+        availabilityOverrides[p.id] !== undefined
+          ? availabilityOverrides[p.id]
+          : (p.stock ?? 0) > 0;
+
+      return {
+        id: p.id,
+        name: p.name,
+        sku: `SKU-${p.barcode ? p.barcode.slice(-4) : "0000"}`,
+        barcode: p.barcode,
+        category: "General",
+        stock: p.stock ?? 0,
+        stockWarning:
+          (p.stock ?? 0) <= 0
+            ? "out_of_stock"
+            : (p.stock ?? 0) <= 5
+            ? "low_stock"
+            : null,
+        stockWarningText:
+          (p.stock ?? 0) <= 0
+            ? "Agotado"
+            : (p.stock ?? 0) <= 5
+            ? "Bajo Stock"
+            : undefined,
+        price: Number(p.price) || 0,
+        cost: Math.round((Number(p.price) || 0) * 0.65),
+        margin: 35,
+        channels: ["POS", "Web"],
+        available: isAvailable,
+        imageUrl:
+          "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120&auto=format&fit=crop&q=80",
+      };
+    });
+  }, [rawProducts, availabilityOverrides]);
 
   // Web keyboard shortcuts listener (F4: Focus search, F3: New product, Escape: Clear)
   useEffect(() => {
@@ -206,11 +231,10 @@ export default function InventoryScreen() {
   };
 
   const handleToggleAvailability = (id: string) => {
-    setProducts((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, available: !item.available } : item,
-      ),
-    );
+    setAvailabilityOverrides((prev) => ({
+      ...prev,
+      [id]: !products.find((p) => p.id === id)?.available,
+    }));
   };
 
   const handleQuickAddStock = (id: string) => {
@@ -284,7 +308,7 @@ export default function InventoryScreen() {
   return (
     <ScrollView
       className="flex-1 bg-surface"
-      contentContainerClassName="p-4 lg:p-6 pb-12 gap-6 max-w-[1720px] mx-auto w-full"
+      contentContainerClassName="p-3 sm:p-4 lg:p-6 pb-28 sm:pb-12 gap-3.5 sm:gap-6 max-w-[1720px] mx-auto w-full"
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl
@@ -315,6 +339,7 @@ export default function InventoryScreen() {
       <InventoryToolbar
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        onScanPress={() => setIsScannerModalOpen(true)}
         inStock={inStockOnly}
         onInStockChange={handleInStockChange}
         viewMode={viewMode}
@@ -330,25 +355,54 @@ export default function InventoryScreen() {
           </Text>
         </View>
       ) : products.length === 0 ? (
-        <View className="p-12 bg-surface-container-low rounded-2xl border border-dashed border-surface-container-high items-center justify-center gap-3 my-4">
-          <View className="w-14 h-14 rounded-2xl bg-surface-container-high items-center justify-center">
-            <Text className="text-2xl">📦</Text>
-          </View>
-          <Text className="text-base font-bold text-on-surface">
-            Tu catálogo de inventario está vacío
-          </Text>
-          <Text className="text-xs text-on-surface-variant max-w-sm text-center">
-            Empieza registrando tu primer producto con código de barras, precio de venta y stock para tu mostrador.
-          </Text>
-          <TouchableOpacity
-            onPress={handleNewProduct}
-            className="mt-2 bg-primary px-5 py-2.5 rounded-xl flex-row items-center gap-2"
-          >
-            <Text className="text-xs font-bold text-on-primary">
-              + Crear Primer Producto
+        debouncedSearch.trim().length > 0 || inStockOnly !== undefined ? (
+          <View className="p-6 sm:p-12 bg-surface-container-low rounded-2xl border border-dashed border-surface-container-high items-center justify-center gap-3 my-2 sm:my-4">
+            <View className="w-14 h-14 rounded-2xl bg-surface-container-high items-center justify-center">
+              <MaterialIcons name="search-off" size={28} color="#c7c4d7" />
+            </View>
+            <Text className="text-base font-bold text-on-surface text-center">
+              No se han encontrado productos
             </Text>
-          </TouchableOpacity>
-        </View>
+            <Text className="text-xs text-on-surface-variant max-w-sm text-center">
+              {debouncedSearch.trim().length > 0
+                ? `No hay coincidencias para "${debouncedSearch.trim()}". Intenta con otro término o código de barras.`
+                : "No se encontraron productos coincidentes con los filtros aplicados."}
+            </Text>
+            {debouncedSearch.trim().length > 0 && (
+              <TouchableOpacity
+                onPress={() => {
+                  setSearchQuery("");
+                  setDebouncedSearch("");
+                }}
+                className="mt-1 bg-surface-container-high border border-surface-container-highest/60 px-4 py-2 rounded-xl"
+              >
+                <Text className="text-xs font-semibold text-on-surface">
+                  Limpiar búsqueda
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        ) : (
+          <View className="p-6 sm:p-12 bg-surface-container-low rounded-2xl border border-dashed border-surface-container-high items-center justify-center gap-3 my-2 sm:my-4">
+            <View className="w-14 h-14 rounded-2xl bg-surface-container-high items-center justify-center">
+              <Text className="text-2xl">📦</Text>
+            </View>
+            <Text className="text-base font-bold text-on-surface">
+              Tu catálogo de inventario está vacío
+            </Text>
+            <Text className="text-xs text-on-surface-variant max-w-sm text-center">
+              Empieza registrando tu primer producto con código de barras, precio de venta y stock para tu mostrador.
+            </Text>
+            <TouchableOpacity
+              onPress={handleNewProduct}
+              className="mt-2 bg-primary px-5 py-2.5 rounded-xl flex-row items-center gap-2"
+            >
+              <Text className="text-xs font-bold text-on-primary">
+                + Crear Primer Producto
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )
       ) : viewMode === "table" ? (
         <InventoryTable
           products={filteredProducts}
@@ -445,6 +499,15 @@ export default function InventoryScreen() {
           setProductToDelete(null);
         }}
         product={productToDelete}
+      />
+
+      {/* 10. Barcode Scanner Search Modal */}
+      <BarcodeScannerModal
+        visible={isScannerModalOpen}
+        onClose={() => setIsScannerModalOpen(false)}
+        onScan={handleScanBarcode}
+        title="Buscar Producto por Código"
+        subtitle="Apunta la cámara al código de barras para buscarlo"
       />
     </ScrollView>
   );
