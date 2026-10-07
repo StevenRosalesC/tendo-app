@@ -397,7 +397,7 @@ export default function RegisterScreen() {
                         color="#c0c1ff"
                       />
                       <Text className="text-xs font-medium text-on-surface-variant">
-                        Clerk Enterprise Guard
+                        Autenticación Segura
                       </Text>
                     </View>
                   </View>

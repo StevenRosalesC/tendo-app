@@ -365,7 +365,7 @@ export default function LoginPage() {
               certifications={[
                 { icon: "verified-user", label: "PCI DSS Nivel 1" },
                 { icon: "security", label: "Cifrado E2E AES-256" },
-                { icon: "fingerprint", label: "Clerk Enterprise Guard" },
+                { icon: "fingerprint", label: "Autenticación Segura" },
               ]}
             />
 

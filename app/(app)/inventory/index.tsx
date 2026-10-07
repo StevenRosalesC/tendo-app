@@ -99,7 +99,7 @@ export default function InventoryScreen() {
     queryKey: ["inventory-valuation"],
     queryFn: async () => {
       const token = await getToken();
-      if (!token) throw new Error("No active Clerk session token available");
+      if (!token) throw new Error("No hay una sesión activa disponible");
       try {
         return await tendoApi.getInventoryValuation(token);
       } catch (err: any) {
@@ -128,7 +128,7 @@ export default function InventoryScreen() {
     ],
     queryFn: async () => {
       const token = await getToken();
-      if (!token) throw new Error("No active Clerk session token available");
+      if (!token) throw new Error("No hay una sesión activa disponible");
       return tendoApi.getProducts(token, {
         page: currentPage,
         limit: rowsPerPage,
@@ -294,7 +294,7 @@ export default function InventoryScreen() {
     try {
       setIsExporting(true);
       const token = await getToken();
-      if (!token) throw new Error("No hay una sesión activa de Clerk");
+      if (!token) throw new Error("No hay una sesión activa disponible");
 
       const res = await tendoApi.getProducts(token, { page: 1, limit: 1000 });
       const items = Array.isArray(res) ? res : res?.data || [];

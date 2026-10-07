@@ -30,7 +30,7 @@ export default function DeleteProductModal({
     mutationFn: async () => {
       if (!product) throw new Error("No hay producto seleccionado.");
       const token = await getToken();
-      if (!token) throw new Error("No active Clerk session available");
+      if (!token) throw new Error("No se encontró una sesión activa.");
 
       return tendoApi.deleteProduct(token, product.id);
     },

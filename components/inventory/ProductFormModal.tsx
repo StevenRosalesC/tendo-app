@@ -138,7 +138,7 @@ export default function ProductFormModal({
   const mutation = useMutation({
     mutationFn: async () => {
       const token = await getToken();
-      if (!token) throw new Error("No active Clerk session available");
+      if (!token) throw new Error("No se encontró una sesión activa.");
 
       const numPrice = parseFloat(price);
       const numCost = costPrice.trim() ? parseFloat(costPrice) : undefined;
