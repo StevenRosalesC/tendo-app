@@ -298,8 +298,14 @@ export const tendoApi = {
   /**
    * Process a POS sale checkout
    */
-  createSale: (token: string, saleData: { items: { productId: string; quantity: number }[] }) => {
-    return apiRequest<any>("/sales", token, {
+  createSale: (
+    token: string,
+    saleData: {
+      items: { productId: string; quantity: number }[];
+      discount?: number;
+    },
+  ) => {
+    return apiRequest<SaleRecord>("/sales", token, {
       method: "POST",
       body: JSON.stringify(saleData),
     });
