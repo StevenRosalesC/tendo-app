@@ -18,8 +18,8 @@ export default function MobileHeader({
   operatorInitial,
   onOpenOrder,
   orderItemCount,
-  stationName = "Caja #04",
-  shiftStatus = "Turno Activo",
+  stationName = "Terminal",
+  shiftStatus = "POS",
   isOnline = true,
 }: MobileHeaderProps) {
   const totalUnits = useCartStore((s) =>

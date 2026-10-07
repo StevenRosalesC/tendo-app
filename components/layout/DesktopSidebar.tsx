@@ -34,14 +34,14 @@ export default function DesktopSidebar({
 
   const sidebarLinks: SidebarLink[] = [
     {
-      label: "Dashboard Hub",
-      icon: "grid-view",
+      label: "Inicio Hub",
+      icon: "dashboard",
       route: "/home",
       active: currentPath === "/home" || currentPath === "/",
     },
     {
       label: "Terminal POS",
-      icon: "desktop-windows",
+      icon: "point-of-sale",
       route: "/terminal",
       active: currentPath === "/terminal",
     },
@@ -52,20 +52,14 @@ export default function DesktopSidebar({
       active: currentPath === "/inventory",
     },
     {
-      label: "Movimientos y Caja",
-      icon: "payments",
-      route: "/reports",
-      active: false,
-    },
-    {
-      label: "Reportes",
+      label: "Reportes y Ventas",
       icon: "insights",
       route: "/reports",
       active: currentPath === "/reports",
     },
     {
-      label: "Ajustes",
-      icon: "tune",
+      label: "Ajustes de Tienda",
+      icon: "settings",
       route: "/settings",
       active: currentPath === "/settings",
     },
@@ -125,13 +119,17 @@ export default function DesktopSidebar({
       <View className="p-4 bg-surface-container-lowest border-t border-surface-container-high/40 gap-3">
         <View className="flex-row items-center justify-between px-3 py-1.5 bg-surface-container-low rounded-lg border border-surface-container-high/40">
           <View className="flex-row items-center gap-2">
-            <View className="w-2 h-2 rounded-full bg-primary" />
+            <View
+              className={`w-2 h-2 rounded-full ${
+                isHardwareConnected ? "bg-emerald-400" : "bg-rose-400"
+              }`}
+            />
             <Text className="text-xs text-on-surface-variant font-medium">
-              Hardware Terminal
+              Servidor POS
             </Text>
           </View>
           <Text className="text-xs text-on-surface font-semibold">
-            OK (3 disp.)
+            {isHardwareConnected ? "Conectado" : "Desconectado"}
           </Text>
         </View>
 

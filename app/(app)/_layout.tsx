@@ -24,18 +24,22 @@ export default function AppLayout() {
   // Initialize push notifications lifecycle and listeners
   usePushNotifications();
 
-  const [sessionTime, setSessionTime] = useState<string>("04:22:18");
+  const [currentTime, setCurrentTime] = useState<string>("");
 
-  // Live timer for shift telemetry
+  // Live real-time clock for station header
   useEffect(() => {
-    let seconds = 4 * 3600 + 22 * 60 + 18;
-    const interval = setInterval(() => {
-      seconds += 1;
-      const h = String(Math.floor(seconds / 3600)).padStart(2, "0");
-      const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, "0");
-      const s = String(seconds % 60).padStart(2, "0");
-      setSessionTime(`${h}:${m}:${s}`);
-    }, 1000);
+    const updateTime = () => {
+      const now = new Date();
+      setCurrentTime(
+        now.toLocaleTimeString("es-MX", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        })
+      );
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
     return () => clearInterval(interval);
   }, []);
 
@@ -51,11 +55,11 @@ export default function AppLayout() {
     return <Redirect href="/(auth)/login" />;
   }
 
-  const operatorName = userProfile?.name || user?.fullName || "Carlos Mendoza";
+  const operatorName = userProfile?.name || user?.fullName || "Operador POS";
   const firstName =
-    userProfile?.name?.split(" ")[0] || user?.firstName || "Carlos";
+    userProfile?.name?.split(" ")[0] || user?.firstName || "Operador";
   const operatorInitial = firstName.charAt(0).toUpperCase();
-  const storeName = userProfile?.store?.name || "Sucursal Condesa";
+  const storeName = userProfile?.store?.name || "Sucursal Principal";
   const roleName = userProfile?.role || "ADMIN";
 
   // Dynamic titles based on active route
@@ -88,7 +92,7 @@ export default function AppLayout() {
           operatorInitial={operatorInitial}
           roleName={roleName}
           storeName={storeName}
-          isHardwareConnected={true}
+          isHardwareConnected={isWsConnected}
           onNavigate={(route) => router.replace(route as any)}
           onSignOut={() => signOut()}
         />
@@ -98,20 +102,20 @@ export default function AppLayout() {
           {/* Top Header: Desktop variant */}
           <DesktopHeader
             pageTitle={pageInfo.desktop}
-            sessionTime={sessionTime}
+            sessionTime={currentTime}
             operatorInitial={operatorInitial}
-            stationName="Caja #01"
+            stationName={roleName}
             branchName={storeName}
             isOnline={isWsConnected}
             onLock={() => signOut()}
-            onSync={() => {}}
           />
 
           {/* Top Header: Mobile variant */}
           <MobileHeader
             pageTitle={pageInfo.mobile}
             operatorInitial={operatorInitial}
-            stationName="Caja #01"
+            stationName={storeName}
+            shiftStatus={roleName}
             isOnline={isWsConnected}
           />
 

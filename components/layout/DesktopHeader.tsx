@@ -8,7 +8,6 @@ export interface DesktopHeaderProps {
   sessionTime: string;
   operatorInitial: string;
   onLock: () => void;
-  onSync?: () => void;
   onOpenOrder?: () => void;
   orderItemCount?: number;
   stationName?: string;
@@ -21,11 +20,10 @@ export default function DesktopHeader({
   sessionTime,
   operatorInitial,
   onLock,
-  onSync,
   onOpenOrder,
   orderItemCount,
-  stationName = "Caja #04",
-  branchName = "Sucursal Condesa",
+  stationName = "Estación POS",
+  branchName = "Sucursal Central",
   isOnline = true,
 }: DesktopHeaderProps) {
   const totalUnits = useCartStore((s) =>
@@ -108,20 +106,6 @@ export default function DesktopHeader({
             Bloquear
           </Text>
         </TouchableOpacity>
-
-        {onSync && (
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={onSync}
-            accessibilityLabel="Sincronizar catálogo"
-            className="h-9 px-2.5 sm:px-3 bg-surface-container-high hover:bg-surface-container-highest rounded-lg flex-row items-center gap-1.5 border border-surface-container-highest/60"
-          >
-            <MaterialIcons name="sync" size={16} color="#c7c4d7" />
-            <Text className="text-xs font-medium text-on-surface hidden 2xl:inline">
-              Sincronizar
-            </Text>
-          </TouchableOpacity>
-        )}
 
         <View className="w-8 h-8 rounded-full bg-primary items-center justify-center ml-0.5 sm:ml-1 shadow-sm">
           <Text className="text-xs font-bold text-on-primary">
