@@ -1,4 +1,5 @@
 import { useAuth } from "@clerk/expo";
+import { useQueryClient } from "@tanstack/react-query";
 import { MaterialIcons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
@@ -16,8 +17,9 @@ import useCartStore from "../../stores/useCartStore";
 import CartHeader from "./CartHeader";
 import CartItemRow from "./CartItemRow";
 import CartSummary from "./CartSummary";
-
+import QuantityEditModal from "./QuantityEditModal";
 import SelectProductModal from "./SelectProductModal";
+import { CartItem } from "./types";
 
 export interface TerminalCartProps {
   onCheckoutSuccess?: (ticketId: string, total: number) => void;
@@ -25,6 +27,7 @@ export interface TerminalCartProps {
 
 export default function TerminalCart({ onCheckoutSuccess }: TerminalCartProps) {
   const { getToken } = useAuth();
+  const queryClient = useQueryClient();
   const {
     items,
     customer,
@@ -32,6 +35,7 @@ export default function TerminalCart({ onCheckoutSuccess }: TerminalCartProps) {
     globalDiscountPercent,
     addItem,
     removeItem,
+    updateQuantity,
     incrementQuantity,
     decrementQuantity,
     clearCart,
@@ -43,6 +47,7 @@ export default function TerminalCart({ onCheckoutSuccess }: TerminalCartProps) {
 
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isSelectModalOpen, setIsSelectModalOpen] = useState(false);
+  const [editingQuantityItem, setEditingQuantityItem] = useState<CartItem | null>(null);
   const [barcodeInput, setBarcodeInput] = useState("");
   const [isSearchingBarcode, setIsSearchingBarcode] = useState(false);
   const [isProcessingCheckout, setIsProcessingCheckout] = useState(false);
@@ -70,6 +75,9 @@ export default function TerminalCart({ onCheckoutSuccess }: TerminalCartProps) {
             stock: product.stock,
             imageUrl: product.imageUrl,
             category: product.category,
+            unit: product.unit,
+            trackStock: product.trackStock,
+            costPrice: product.costPrice,
           },
           1,
         );
@@ -103,18 +111,30 @@ export default function TerminalCart({ onCheckoutSuccess }: TerminalCartProps) {
     );
   };
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (items.length === 0) return;
 
     setIsProcessingCheckout(true);
-    setTimeout(() => {
-      setIsProcessingCheckout(false);
+    try {
+      const token = await getToken();
+      let saleResponse: any = null;
+      if (token) {
+        saleResponse = await tendoApi.createSale(token, {
+          items: items.map((i) => ({
+            productId: i.id,
+            quantity: i.quantity,
+          })),
+        });
+        queryClient.invalidateQueries({ queryKey: ["products"] });
+      }
+
       const paidTotal = totals.total;
-      const currentTicket = ticketNumber;
+      const currentTicket =
+        saleResponse?.id?.slice(-6)?.toUpperCase() || ticketNumber;
 
       Alert.alert(
         "¡Venta Cobrada con Éxito!",
-        `Ticket: ${currentTicket}\nTotal: $${paidTotal.toFixed(2)} MXN\nCliente: ${customer.name}`,
+        `Ticket: ${currentTicket}\nTotal: $${paidTotal.toFixed(2)}\nCliente: ${customer.name}`,
         [
           {
             text: "Nueva Venta",
@@ -125,7 +145,15 @@ export default function TerminalCart({ onCheckoutSuccess }: TerminalCartProps) {
           },
         ],
       );
-    }, 600);
+    } catch (err: any) {
+      Alert.alert(
+        "Error al procesar la venta",
+        err?.message || "Ocurrió un error al registrar la venta en el servidor.",
+        [{ text: "Aceptar" }],
+      );
+    } finally {
+      setIsProcessingCheckout(false);
+    }
   };
 
   const handleCustomerPress = () => {
@@ -260,6 +288,7 @@ export default function TerminalCart({ onCheckoutSuccess }: TerminalCartProps) {
                   onIncrement={incrementQuantity}
                   onDecrement={decrementQuantity}
                   onRemove={removeItem}
+                  onEditQuantity={setEditingQuantityItem}
                 />
               ))}
             </ScrollView>
@@ -288,6 +317,18 @@ export default function TerminalCart({ onCheckoutSuccess }: TerminalCartProps) {
       <SelectProductModal
         visible={isSelectModalOpen}
         onClose={() => setIsSelectModalOpen(false)}
+      />
+
+      {/* Direct Quantity & Weight Edit Modal */}
+      <QuantityEditModal
+        visible={!!editingQuantityItem}
+        item={editingQuantityItem}
+        onClose={() => setEditingQuantityItem(null)}
+        onConfirm={(newQty) => {
+          if (editingQuantityItem) {
+            updateQuantity(editingQuantityItem.id, newQty);
+          }
+        }}
       />
     </View>
   );

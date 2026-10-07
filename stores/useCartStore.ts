@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { CartItem, CartTotals, CustomerInfo } from "../components/terminal/types";
+import { ProductUnit } from "../types/auth.types";
 
 interface CartState {
   items: CartItem[];
@@ -20,13 +21,16 @@ interface CartState {
       stock?: number;
       imageUrl?: string;
       category?: string;
+      unit?: ProductUnit;
+      trackStock?: boolean;
+      costPrice?: number;
     },
     quantity?: number,
   ) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
-  incrementQuantity: (productId: string) => void;
-  decrementQuantity: (productId: string) => void;
+  incrementQuantity: (productId: string, step?: number) => void;
+  decrementQuantity: (productId: string, step?: number) => void;
   clearCart: () => void;
   setCustomer: (customer: CustomerInfo) => void;
   setGlobalDiscountPercent: (percent: number) => void;
@@ -66,35 +70,35 @@ export const useCartStore = create<CartState>((set, get) => ({
     const { items } = get();
     const existingIndex = items.findIndex((i) => i.id === product.id);
 
+    // If trackStock is false, there is no physical stock limit
+    const isTracked = product.trackStock !== false;
+    const maxStock =
+      isTracked && typeof product.stock === "number" ? product.stock : Infinity;
+
     if (existingIndex > -1) {
       const updated = [...items];
       const existing = updated[existingIndex];
-      const newQty = existing.quantity + quantityToAdd;
+      const newQty = +(existing.quantity + quantityToAdd).toFixed(3);
 
-      // Check stock limit if provided
-      if (typeof product.stock === "number" && newQty > product.stock) {
-        updated[existingIndex] = {
-          ...existing,
-          quantity: product.stock,
-        };
-      } else {
-        updated[existingIndex] = {
-          ...existing,
-          quantity: newQty,
-        };
-      }
+      updated[existingIndex] = {
+        ...existing,
+        quantity: Math.min(newQty, maxStock),
+      };
       set({ items: updated });
     } else {
       const newItem: CartItem = {
         id: product.id,
         name: product.name,
         price: product.price,
-        quantity: Math.max(1, quantityToAdd),
+        quantity: Math.min(Math.max(0.001, quantityToAdd), maxStock),
         barcode: product.barcode || "",
         sku: product.sku,
         stock: product.stock,
         imageUrl: product.imageUrl,
         category: product.category,
+        unit: product.unit,
+        trackStock: product.trackStock,
+        costPrice: product.costPrice,
       };
       set({ items: [...items, newItem] });
     }
@@ -115,7 +119,9 @@ export const useCartStore = create<CartState>((set, get) => ({
     set((state) => ({
       items: state.items.map((item) => {
         if (item.id === productId) {
-          const max = typeof item.stock === "number" ? item.stock : Infinity;
+          const isTracked = item.trackStock !== false;
+          const max =
+            isTracked && typeof item.stock === "number" ? item.stock : Infinity;
           return { ...item, quantity: Math.min(quantity, max) };
         }
         return item;
@@ -123,13 +129,16 @@ export const useCartStore = create<CartState>((set, get) => ({
     }));
   },
 
-  incrementQuantity: (productId: string) => {
+  incrementQuantity: (productId: string, step = 1) => {
     set((state) => ({
       items: state.items.map((item) => {
         if (item.id === productId) {
-          const max = typeof item.stock === "number" ? item.stock : Infinity;
+          const isTracked = item.trackStock !== false;
+          const max =
+            isTracked && typeof item.stock === "number" ? item.stock : Infinity;
+          const next = +(item.quantity + step).toFixed(3);
           if (item.quantity < max) {
-            return { ...item, quantity: item.quantity + 1 };
+            return { ...item, quantity: Math.min(next, max) };
           }
         }
         return item;
@@ -137,17 +146,19 @@ export const useCartStore = create<CartState>((set, get) => ({
     }));
   },
 
-  decrementQuantity: (productId: string) => {
+  decrementQuantity: (productId: string, step = 1) => {
     const { items, removeItem } = get();
     const target = items.find((i) => i.id === productId);
     if (!target) return;
 
-    if (target.quantity <= 1) {
+    if (target.quantity <= step) {
       removeItem(productId);
     } else {
       set({
         items: items.map((item) =>
-          item.id === productId ? { ...item, quantity: item.quantity - 1 } : item,
+          item.id === productId
+            ? { ...item, quantity: +(item.quantity - step).toFixed(3) }
+            : item,
         ),
       });
     }

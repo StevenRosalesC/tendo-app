@@ -1,4 +1,5 @@
 import { useAuth } from "@clerk/expo";
+import { useQueryClient } from "@tanstack/react-query";
 import { MaterialIcons } from "@expo/vector-icons";
 import { usePathname, useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -13,7 +14,9 @@ import tendoApi from "../../services/api";
 import useCartStore from "../../stores/useCartStore";
 import { BarcodeScannerModal } from "../ui/BarcodeScanner";
 import Drawer from "../ui/Drawer";
+import QuantityEditModal from "../terminal/QuantityEditModal";
 import SelectProductModal from "../terminal/SelectProductModal";
+import { CartItem } from "../terminal/types";
 
 export interface OrderDrawerProps {
   onCheckoutSuccess?: (ticketId: string, total: number) => void;
@@ -23,6 +26,7 @@ export default function OrderDrawer({ onCheckoutSuccess }: OrderDrawerProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { getToken } = useAuth();
+  const queryClient = useQueryClient();
 
   const {
     items,
@@ -33,6 +37,7 @@ export default function OrderDrawer({ onCheckoutSuccess }: OrderDrawerProps) {
     closeDrawer,
     addItem,
     removeItem,
+    updateQuantity,
     incrementQuantity,
     decrementQuantity,
     clearCart,
@@ -44,6 +49,7 @@ export default function OrderDrawer({ onCheckoutSuccess }: OrderDrawerProps) {
 
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isSelectModalOpen, setIsSelectModalOpen] = useState(false);
+  const [editingQuantityItem, setEditingQuantityItem] = useState<CartItem | null>(null);
   const [showDiscountSelector, setShowDiscountSelector] = useState(false);
   const [isProcessingCheckout, setIsProcessingCheckout] = useState(false);
 
@@ -68,6 +74,9 @@ export default function OrderDrawer({ onCheckoutSuccess }: OrderDrawerProps) {
             stock: product.stock,
             imageUrl: product.imageUrl,
             category: product.category,
+            unit: product.unit,
+            trackStock: product.trackStock,
+            costPrice: product.costPrice,
           },
           1,
         );
@@ -104,18 +113,30 @@ export default function OrderDrawer({ onCheckoutSuccess }: OrderDrawerProps) {
     );
   };
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (items.length === 0) return;
 
     setIsProcessingCheckout(true);
-    setTimeout(() => {
-      setIsProcessingCheckout(false);
+    try {
+      const token = await getToken();
+      let saleResponse: any = null;
+      if (token) {
+        saleResponse = await tendoApi.createSale(token, {
+          items: items.map((i) => ({
+            productId: i.id,
+            quantity: i.quantity,
+          })),
+        });
+        queryClient.invalidateQueries({ queryKey: ["products"] });
+      }
+
       const paidTotal = totals.total;
-      const currentTicket = ticketNumber;
+      const currentTicket =
+        saleResponse?.id?.slice(-6)?.toUpperCase() || ticketNumber;
 
       Alert.alert(
         "¡Venta Cobrada con Éxito!",
-        `Ticket: ${currentTicket}\nTotal: $${paidTotal.toFixed(2)} MXN\nCliente: ${customer.name}`,
+        `Ticket: ${currentTicket}\nTotal: $${paidTotal.toFixed(2)}\nCliente: ${customer.name}`,
         [
           {
             text: "Aceptar",
@@ -127,7 +148,15 @@ export default function OrderDrawer({ onCheckoutSuccess }: OrderDrawerProps) {
           },
         ],
       );
-    }, 600);
+    } catch (err: any) {
+      Alert.alert(
+        "Error al procesar la venta",
+        err?.message || "Ocurrió un error al registrar la venta en el servidor.",
+        [{ text: "Aceptar" }],
+      );
+    } finally {
+      setIsProcessingCheckout(false);
+    }
   };
 
   const handleGoToTerminal = () => {
@@ -262,7 +291,7 @@ export default function OrderDrawer({ onCheckoutSuccess }: OrderDrawerProps) {
               Total Pedido
             </Text>
             <Text className="text-[10px] text-on-surface-variant">
-              Moneda: MXN
+              IVA incluido
             </Text>
           </View>
 
@@ -433,8 +462,16 @@ export default function OrderDrawer({ onCheckoutSuccess }: OrderDrawerProps) {
             <View className="flex-col gap-2.5">
               {items.map((item) => {
                 const lineTotal = item.price * item.quantity;
+                const isTracked = item.trackStock !== false;
                 const isMaxStock =
-                  typeof item.stock === "number" && item.quantity >= item.stock;
+                  isTracked &&
+                  typeof item.stock === "number" &&
+                  item.quantity >= item.stock;
+                const unitShort = item.unit
+                  ? item.unit === "UNIT"
+                    ? "pz"
+                    : item.unit.toLowerCase()
+                  : "pz";
 
                 return (
                   <View
@@ -467,9 +504,9 @@ export default function OrderDrawer({ onCheckoutSuccess }: OrderDrawerProps) {
                           >
                             {item.name}
                           </Text>
-                          <View className="flex-row items-center gap-1.5 mt-0.5">
+                          <View className="flex-row items-center gap-1.5 mt-0.5 flex-wrap">
                             <Text className="text-xs font-mono font-semibold text-primary">
-                              ${item.price.toFixed(2)}
+                              ${item.price.toFixed(2)} /{unitShort}
                             </Text>
                             {item.barcode && (
                               <>
@@ -479,6 +516,18 @@ export default function OrderDrawer({ onCheckoutSuccess }: OrderDrawerProps) {
                                 <Text className="text-[10px] font-mono text-on-surface-variant truncate">
                                   {item.barcode}
                                 </Text>
+                              </>
+                            )}
+                            {!isTracked && (
+                              <>
+                                <Text className="text-[10px] text-on-surface-variant">
+                                  •
+                                </Text>
+                                <View className="px-1.5 py-0.2 rounded bg-amber-500/20">
+                                  <Text className="text-[9px] text-amber-300 font-medium">
+                                    A granel
+                                  </Text>
+                                </View>
                               </>
                             )}
                           </View>
@@ -511,11 +560,16 @@ export default function OrderDrawer({ onCheckoutSuccess }: OrderDrawerProps) {
                           />
                         </TouchableOpacity>
 
-                        <View className="w-7 items-center justify-center">
-                          <Text className="text-xs font-bold font-mono text-on-surface">
-                            {item.quantity}
+                        <TouchableOpacity
+                          onPress={() => setEditingQuantityItem(item)}
+                          activeOpacity={0.7}
+                          accessibilityLabel="Modificar cantidad"
+                          className="px-1.5 min-w-[28px] items-center justify-center rounded hover:bg-surface-container active:bg-surface-container-highest"
+                        >
+                          <Text className="text-[11px] font-bold font-mono text-on-surface">
+                            {item.quantity} {unitShort}
                           </Text>
-                        </View>
+                        </TouchableOpacity>
 
                         <TouchableOpacity
                           onPress={() => incrementQuantity(item.id)}
@@ -538,7 +592,7 @@ export default function OrderDrawer({ onCheckoutSuccess }: OrderDrawerProps) {
                         </Text>
                         {item.quantity > 1 && (
                           <Text className="text-[10px] text-on-surface-variant font-mono">
-                            ({item.quantity} × ${item.price.toFixed(2)})
+                            ({item.quantity} {unitShort} × ${item.price.toFixed(2)})
                           </Text>
                         )}
                       </View>
@@ -562,6 +616,18 @@ export default function OrderDrawer({ onCheckoutSuccess }: OrderDrawerProps) {
       <SelectProductModal
         visible={isSelectModalOpen}
         onClose={() => setIsSelectModalOpen(false)}
+      />
+
+      {/* Direct Quantity & Weight Edit Modal */}
+      <QuantityEditModal
+        visible={!!editingQuantityItem}
+        item={editingQuantityItem}
+        onClose={() => setEditingQuantityItem(null)}
+        onConfirm={(newQty) => {
+          if (editingQuantityItem) {
+            updateQuantity(editingQuantityItem.id, newQty);
+          }
+        }}
       />
     </>
   );

@@ -87,6 +87,9 @@ export default function SelectProductModal({
         stock: product.stock,
         imageUrl: product.imageUrl,
         category: product.category,
+        unit: product.unit,
+        trackStock: product.trackStock,
+        costPrice: product.costPrice,
       },
       1,
     );
@@ -203,10 +206,18 @@ export default function SelectProductModal({
           ) : (
             <View className="gap-2 py-1">
               {products.map((product) => {
+                const isTracked = product.trackStock !== false;
                 const isOutOfStock =
-                  typeof product.stock === "number" && product.stock <= 0;
+                  isTracked &&
+                  typeof product.stock === "number" &&
+                  product.stock <= 0;
                 const cartMatch = cartItems.find((i) => i.id === product.id);
                 const isJustAdded = recentlyAddedId === product.id;
+                const unitShort = product.unit
+                  ? product.unit === "UNIT"
+                    ? "pz"
+                    : product.unit.toLowerCase()
+                  : "pz";
 
                 return (
                   <View
@@ -240,7 +251,8 @@ export default function SelectProductModal({
                         </Text>
                         <View className="flex-row items-center gap-2 mt-0.5 flex-wrap">
                           <Text className="text-xs font-mono font-bold text-primary">
-                            ${Number(product.price).toFixed(2)} MXN
+                            ${Number(product.price).toFixed(2)}
+                            {product.unit && product.unit !== "UNIT" ? ` /${unitShort}` : ""}
                           </Text>
                           {product.barcode && (
                             <>
@@ -250,6 +262,18 @@ export default function SelectProductModal({
                               <Text className="text-[11px] font-mono text-on-surface-variant truncate">
                                 {product.barcode}
                               </Text>
+                            </>
+                          )}
+                          {!isTracked && (
+                            <>
+                              <Text className="text-xs text-on-surface-variant">
+                                •
+                              </Text>
+                              <View className="px-1.5 py-0.2 rounded bg-amber-500/20 border border-amber-500/30">
+                                <Text className="text-[10px] text-amber-300 font-medium">
+                                  A granel
+                                </Text>
+                              </View>
                             </>
                           )}
                           {product.category && (
@@ -271,25 +295,33 @@ export default function SelectProductModal({
                     {/* Stock & Add Action */}
                     <View className="flex-row items-center gap-2.5 shrink-0">
                       {/* Stock Badge */}
-                      <View
-                        className={`px-2 py-0.5 rounded-full ${
-                          isOutOfStock
-                            ? "bg-error/15 border border-error/30"
-                            : "bg-surface-container-high"
-                        }`}
-                      >
-                        <Text
-                          className={`text-[10px] font-semibold ${
-                            isOutOfStock ? "text-error" : "text-on-surface-variant"
+                      {!isTracked ? (
+                        <View className="px-2 py-0.5 rounded-full bg-surface-container-high border border-surface-container-highest">
+                          <Text className="text-[10px] font-semibold text-primary">
+                            Ilimitado
+                          </Text>
+                        </View>
+                      ) : (
+                        <View
+                          className={`px-2 py-0.5 rounded-full ${
+                            isOutOfStock
+                              ? "bg-error/15 border border-error/30"
+                              : "bg-surface-container-high"
                           }`}
                         >
-                          {typeof product.stock === "number"
-                            ? isOutOfStock
-                              ? "Agotado"
-                              : `Stock: ${product.stock}`
-                            : "Disponible"}
-                        </Text>
-                      </View>
+                          <Text
+                            className={`text-[10px] font-semibold ${
+                              isOutOfStock ? "text-error" : "text-on-surface-variant"
+                            }`}
+                          >
+                            {typeof product.stock === "number"
+                              ? isOutOfStock
+                                ? "Agotado"
+                                : `Stock: ${product.stock} ${unitShort}`
+                              : "Disponible"}
+                          </Text>
+                        </View>
+                      )}
 
                       {/* Add Button */}
                       <TouchableOpacity

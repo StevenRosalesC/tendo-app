@@ -1,5 +1,7 @@
 export type AppRole = "ADMIN" | "MANAGER" | "CASHIER" | "STAFF";
 
+export type ProductUnit = "UNIT" | "KG" | "LB" | "G" | "L" | "ML" | "M";
+
 export interface UserPermissions {
   stores: string[];
   users: string[];
@@ -12,6 +14,7 @@ export interface StoreData {
   clerkOrgId: string;
   name: string;
   isActive: boolean;
+  defaultUnit?: ProductUnit;
 }
 
 export interface AuthenticatedUserProfile {
@@ -35,6 +38,7 @@ export interface SaleItemEvent {
   productId: string;
   quantity: number;
   priceAtSale: number;
+  costPriceAtSale?: number;
 }
 
 export interface SaleCreatedEvent {

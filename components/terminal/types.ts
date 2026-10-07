@@ -1,9 +1,14 @@
+import { ProductUnit } from "../../types/auth.types";
+
 export interface CartItem {
   id: string;
   name: string;
   price: number;
   quantity: number;
-  barcode: string;
+  barcode?: string;
+  costPrice?: number;
+  unit?: ProductUnit;
+  trackStock?: boolean;
   sku?: string;
   category?: string;
   stock?: number;

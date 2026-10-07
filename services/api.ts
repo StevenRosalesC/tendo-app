@@ -1,5 +1,5 @@
 import { Platform } from "react-native";
-import { AuthenticatedUserProfile } from "../types/auth.types";
+import { AuthenticatedUserProfile, ProductUnit, StoreData } from "../types/auth.types";
 
 export const getApiBaseUrl = (): string => {
   if (process.env.EXPO_PUBLIC_API_URL) {
@@ -90,6 +90,44 @@ export interface GetProductsParams {
   inStock?: boolean;
 }
 
+export interface SaleProductInfo {
+  id: string;
+  name: string;
+  barcode: string | null;
+}
+
+export interface SaleItemRecord {
+  id: string;
+  saleId: string;
+  productId: string;
+  quantity: number;
+  priceAtSale: number;
+  costPriceAtSale: number;
+  product?: SaleProductInfo;
+}
+
+export interface SaleRecord {
+  id: string;
+  storeId: string;
+  userId: string;
+  total: number;
+  createdAt: string;
+  user?: {
+    id: string;
+    name: string;
+    role: string;
+  };
+  items: SaleItemRecord[];
+}
+
+export interface GetSalesParams {
+  page?: number;
+  limit?: number;
+  startDate?: string;
+  endDate?: string;
+  userId?: string;
+}
+
 export const tendoApi = {
   /**
    * Fetch current authenticated operator profile and permissions from NestJS
@@ -104,8 +142,24 @@ export const tendoApi = {
    * Fetch current tenant store details
    */
   getCurrentStore: (token: string) => {
-    return apiRequest<any>("/stores/current", token, {
+    return apiRequest<StoreData>("/stores/current", token, {
       method: "GET",
+    });
+  },
+
+  /**
+   * Update current tenant store settings (name, default unit)
+   */
+  updateCurrentStore: (
+    token: string,
+    data: {
+      name?: string;
+      defaultUnit?: ProductUnit;
+    },
+  ) => {
+    return apiRequest<StoreData>("/stores/current", token, {
+      method: "PATCH",
+      body: JSON.stringify(data),
     });
   },
 
@@ -154,7 +208,15 @@ export const tendoApi = {
    */
   createProduct: (
     token: string,
-    data: { name: string; barcode: string; price: number; stock?: number },
+    data: {
+      name: string;
+      price: number;
+      costPrice?: number;
+      barcode?: string;
+      stock?: number;
+      unit?: ProductUnit;
+      trackStock?: boolean;
+    },
   ) => {
     return apiRequest<any>("/products", token, {
       method: "POST",
@@ -168,7 +230,15 @@ export const tendoApi = {
   updateProduct: (
     token: string,
     id: string,
-    data: { name?: string; barcode?: string; price?: number; stock?: number },
+    data: {
+      name?: string;
+      price?: number;
+      costPrice?: number;
+      barcode?: string;
+      stock?: number;
+      unit?: ProductUnit;
+      trackStock?: boolean;
+    },
   ) => {
     return apiRequest<any>(`/products/${id}`, token, {
       method: "PATCH",
@@ -206,10 +276,17 @@ export const tendoApi = {
   },
 
   /**
-   * List past sales history of the store
+   * List past sales history of the store with optional pagination and date filters
    */
-  getSales: (token: string) => {
-    return apiRequest<any[]>("/sales", token, {
+  getSales: (token: string, params?: GetSalesParams) => {
+    const query = new URLSearchParams();
+    if (params?.page) query.append("page", String(params.page));
+    if (params?.limit) query.append("limit", String(params.limit));
+    if (params?.startDate) query.append("startDate", params.startDate);
+    if (params?.endDate) query.append("endDate", params.endDate);
+    if (params?.userId) query.append("userId", params.userId);
+    const qs = query.toString();
+    return apiRequest<PaginatedResponse<SaleRecord>>(`/sales${qs ? `?${qs}` : ""}`, token, {
       method: "GET",
     });
   },

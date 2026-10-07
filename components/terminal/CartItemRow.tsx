@@ -8,17 +8,31 @@ export interface CartItemRowProps {
   onIncrement: (id: string) => void;
   onDecrement: (id: string) => void;
   onRemove: (id: string) => void;
+  onEditQuantity?: (item: CartItem) => void;
 }
+
+const UNIT_SHORT: Record<string, string> = {
+  UNIT: "pz",
+  KG: "kg",
+  LB: "lb",
+  G: "g",
+  L: "L",
+  ML: "ml",
+  M: "m",
+};
 
 export default function CartItemRow({
   item,
   onIncrement,
   onDecrement,
   onRemove,
+  onEditQuantity,
 }: CartItemRowProps) {
   const lineTotal = item.price * item.quantity;
+  const isTracked = item.trackStock !== false;
   const isMaxStock =
-    typeof item.stock === "number" && item.quantity >= item.stock;
+    isTracked && typeof item.stock === "number" && item.quantity >= item.stock;
+  const unitSuffix = item.unit ? UNIT_SHORT[item.unit] || "pz" : "pz";
 
   return (
     <View className="py-3 px-3 sm:px-4 rounded-2xl bg-surface-container/60 border border-surface-container-high/50 flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -45,7 +59,7 @@ export default function CartItemRow({
           </Text>
           <View className="flex-row items-center gap-2 mt-0.5 flex-wrap">
             <Text className="text-xs font-mono font-semibold text-primary">
-              ${item.price.toFixed(2)}
+              ${item.price.toFixed(2)} /{unitSuffix}
             </Text>
             {item.barcode && (
               <>
@@ -53,6 +67,16 @@ export default function CartItemRow({
                 <Text className="text-[11px] font-mono text-on-surface-variant truncate">
                   {item.barcode}
                 </Text>
+              </>
+            )}
+            {!isTracked && (
+              <>
+                <Text className="text-xs text-on-surface-variant">•</Text>
+                <View className="px-1.5 py-0.2 rounded bg-amber-500/20 border border-amber-500/30">
+                  <Text className="text-[10px] text-amber-300 font-medium">
+                    A granel
+                  </Text>
+                </View>
               </>
             )}
             {item.category && (
@@ -80,17 +104,22 @@ export default function CartItemRow({
             className="w-8 h-8 rounded-lg items-center justify-center bg-surface-container hover:bg-surface-container-lowest"
           >
             <MaterialIcons
-              name={item.quantity === 1 ? "delete-outline" : "remove"}
+              name={item.quantity <= 1 ? "delete-outline" : "remove"}
               size={16}
-              color={item.quantity === 1 ? "#ffb4ab" : "#c7c4d7"}
+              color={item.quantity <= 1 ? "#ffb4ab" : "#c7c4d7"}
             />
           </TouchableOpacity>
 
-          <View className="w-9 items-center justify-center">
-            <Text className="text-sm font-bold font-mono text-on-surface">
-              {item.quantity}
+          <TouchableOpacity
+            onPress={() => onEditQuantity?.(item)}
+            activeOpacity={0.7}
+            accessibilityLabel="Modificar cantidad directamente"
+            className="px-2 min-w-[36px] items-center justify-center rounded hover:bg-surface-container active:bg-surface-container-highest"
+          >
+            <Text className="text-xs font-bold font-mono text-on-surface">
+              {item.quantity} {unitSuffix}
             </Text>
-          </View>
+          </TouchableOpacity>
 
           <TouchableOpacity
             onPress={() => onIncrement(item.id)}

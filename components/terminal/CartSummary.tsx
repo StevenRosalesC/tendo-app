@@ -123,7 +123,7 @@ export default function CartSummary({
               Total a Cobrar
             </Text>
             <Text className="text-[10px] text-on-surface-variant">
-              Moneda: MXN
+              IVA incluido
             </Text>
           </View>
 
