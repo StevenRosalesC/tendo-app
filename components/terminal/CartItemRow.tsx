@@ -12,7 +12,7 @@ export interface CartItemRowProps {
 }
 
 const UNIT_SHORT: Record<string, string> = {
-  UNIT: "pz",
+  UNIT: "u",
   KG: "kg",
   LB: "lb",
   G: "g",
@@ -32,7 +32,7 @@ export default function CartItemRow({
   const isTracked = item.trackStock !== false;
   const isMaxStock =
     isTracked && typeof item.stock === "number" && item.quantity >= item.stock;
-  const unitSuffix = item.unit ? UNIT_SHORT[item.unit] || "pz" : "pz";
+  const unitSuffix = item.unit ? UNIT_SHORT[item.unit] || "u" : "u";
 
   return (
     <View className="py-3 px-3 sm:px-4 rounded-2xl bg-surface-container/60 border border-surface-container-high/50 flex-col sm:flex-row sm:items-center justify-between gap-3">

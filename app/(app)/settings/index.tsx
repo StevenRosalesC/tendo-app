@@ -33,8 +33,8 @@ interface UnitOption {
 const UNIT_OPTIONS: UnitOption[] = [
   {
     value: "UNIT",
-    label: "Unidad / Pieza",
-    abbreviation: "pza",
+    label: "Unidad",
+    abbreviation: "u",
     description: "Artículos contables discretos (bebidas, botanas, cajas)",
   },
   {

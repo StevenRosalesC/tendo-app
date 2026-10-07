@@ -19,7 +19,7 @@ export interface StockAdjustModalProps {
 }
 
 const UNIT_LABELS: Record<ProductUnit, string> = {
-  UNIT: "pz",
+  UNIT: "u",
   KG: "kg",
   LB: "lb",
   G: "g",
@@ -58,7 +58,7 @@ export default function StockAdjustModal({
     "Ajuste manual de caja",
   ];
 
-  const unitSuffix = product?.unit ? UNIT_LABELS[product.unit] || "pz" : "pz";
+  const unitSuffix = product?.unit ? UNIT_LABELS[product.unit] || "u" : "u";
   const isDecimalUnit =
     product?.unit === "KG" ||
     product?.unit === "LB" ||

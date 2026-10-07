@@ -215,9 +215,9 @@ export default function SelectProductModal({
                 const isJustAdded = recentlyAddedId === product.id;
                 const unitShort = product.unit
                   ? product.unit === "UNIT"
-                    ? "pz"
+                    ? "u"
                     : product.unit.toLowerCase()
-                  : "pz";
+                  : "u";
 
                 return (
                   <View

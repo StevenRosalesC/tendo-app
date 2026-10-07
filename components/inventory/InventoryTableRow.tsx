@@ -17,7 +17,7 @@ export interface InventoryTableRowProps {
 }
 
 const UNIT_SHORT: Record<string, string> = {
-  UNIT: "pz",
+  UNIT: "u",
   KG: "kg",
   LB: "lb",
   G: "g",
@@ -41,7 +41,7 @@ export default function InventoryTableRow({
   const isOutOfStock = product.stockWarning === "out_of_stock";
   const isLowStock = product.stockWarning === "low_stock";
   const isTracked = product.trackStock !== false;
-  const unitSuffix = product.unit ? UNIT_SHORT[product.unit] || "pz" : "pz";
+  const unitSuffix = product.unit ? UNIT_SHORT[product.unit] || "u" : "u";
 
   const customRowClass = isLowStock
     ? "bg-error-container/10 hover:bg-error-container/20"

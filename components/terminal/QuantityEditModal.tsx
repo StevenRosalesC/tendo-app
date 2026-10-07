@@ -15,7 +15,7 @@ export interface QuantityEditModalProps {
 }
 
 const UNIT_SHORT: Record<string, string> = {
-  UNIT: "pz",
+  UNIT: "u",
   KG: "kg",
   LB: "lb",
   G: "g",
@@ -42,7 +42,7 @@ export default function QuantityEditModal({
 
   if (!item) return null;
 
-  const unitSuffix = item.unit ? UNIT_SHORT[item.unit] || "pz" : "pz";
+  const unitSuffix = item.unit ? UNIT_SHORT[item.unit] || "u" : "u";
   const isDecimal =
     item.unit === "KG" ||
     item.unit === "LB" ||

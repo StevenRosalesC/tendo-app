@@ -22,7 +22,7 @@ export interface ProductFormModalProps {
 }
 
 const PRODUCT_UNITS: { value: ProductUnit; label: string; short: string }[] = [
-  { value: "UNIT", label: "Pieza / Unidad", short: "pz" },
+  { value: "UNIT", label: "Unidad", short: "u" },
   { value: "KG", label: "Kilogramo", short: "kg" },
   { value: "LB", label: "Libra", short: "lb" },
   { value: "G", label: "Gramo", short: "g" },

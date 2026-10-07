@@ -469,9 +469,9 @@ export default function OrderDrawer({ onCheckoutSuccess }: OrderDrawerProps) {
                   item.quantity >= item.stock;
                 const unitShort = item.unit
                   ? item.unit === "UNIT"
-                    ? "pz"
+                    ? "u"
                     : item.unit.toLowerCase()
-                  : "pz";
+                  : "u";
 
                 return (
                   <View

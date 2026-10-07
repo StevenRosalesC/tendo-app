@@ -17,7 +17,7 @@ export interface ProductDetailModalProps {
 }
 
 const UNIT_SHORT: Record<string, string> = {
-  UNIT: "pz",
+  UNIT: "u",
   KG: "kg",
   LB: "lb",
   G: "g",
@@ -41,7 +41,7 @@ export default function ProductDetailModal({
   const isTracked = product.trackStock !== false;
   const isOutOfStock = isTracked && product.stock <= 0;
   const isLowStock = isTracked && product.stock > 0 && product.stock <= 5;
-  const unitSuffix = product.unit ? UNIT_SHORT[product.unit] || "pz" : "pz";
+  const unitSuffix = product.unit ? UNIT_SHORT[product.unit] || "u" : "u";
   const costPriceVal = product.costPrice ?? product.cost ?? 0;
   const grossProfit = (product.price || 0) - costPriceVal;
 

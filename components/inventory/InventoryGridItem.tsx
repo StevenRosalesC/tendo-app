@@ -15,7 +15,7 @@ export interface InventoryGridItemProps {
 }
 
 const UNIT_SHORT: Record<string, string> = {
-  UNIT: "pz",
+  UNIT: "u",
   KG: "kg",
   LB: "lb",
   G: "g",
@@ -38,7 +38,7 @@ export default function InventoryGridItem({
   const isOutOfStock = product.stockWarning === "out_of_stock";
   const isLowStock = product.stockWarning === "low_stock";
   const isTracked = product.trackStock !== false;
-  const unitSuffix = product.unit ? UNIT_SHORT[product.unit] || "pz" : "pz";
+  const unitSuffix = product.unit ? UNIT_SHORT[product.unit] || "u" : "u";
 
   return (
     <View
