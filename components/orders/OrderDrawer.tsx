@@ -14,6 +14,7 @@ import tendoApi from "../../services/api";
 import useCartStore from "../../stores/useCartStore";
 import { BarcodeScannerModal } from "../ui/BarcodeScanner";
 import Drawer from "../ui/Drawer";
+import CheckoutModal from "../terminal/CheckoutModal";
 import QuantityEditModal from "../terminal/QuantityEditModal";
 import SelectProductModal from "../terminal/SelectProductModal";
 import { CartItem } from "../terminal/types";
@@ -32,7 +33,7 @@ export default function OrderDrawer({ onCheckoutSuccess }: OrderDrawerProps) {
     items,
     customer,
     ticketNumber,
-    globalDiscountPercent,
+    discount,
     isDrawerOpen,
     closeDrawer,
     addItem,
@@ -42,7 +43,7 @@ export default function OrderDrawer({ onCheckoutSuccess }: OrderDrawerProps) {
     decrementQuantity,
     clearCart,
     setCustomer,
-    setGlobalDiscountPercent,
+    setDiscount,
     resetTicket,
     getTotals,
   } = useCartStore();
@@ -51,10 +52,12 @@ export default function OrderDrawer({ onCheckoutSuccess }: OrderDrawerProps) {
   const [isSelectModalOpen, setIsSelectModalOpen] = useState(false);
   const [editingQuantityItem, setEditingQuantityItem] = useState<CartItem | null>(null);
   const [showDiscountSelector, setShowDiscountSelector] = useState(false);
-  const [isProcessingCheckout, setIsProcessingCheckout] = useState(false);
+  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
 
   const totals = getTotals();
-  const discountOptions = [0, 5, 10, 15, 20];
+  const fixedOptions = [0, 10, 20, 50, 100].filter(
+    (val) => val === 0 || val <= totals.subtotal,
+  );
   const isOnTerminal = pathname.includes("/terminal");
 
   const handleScanBarcode = async (barcode: string) => {
@@ -113,50 +116,9 @@ export default function OrderDrawer({ onCheckoutSuccess }: OrderDrawerProps) {
     );
   };
 
-  const handleCheckout = async () => {
+  const handleOpenCheckout = () => {
     if (items.length === 0) return;
-
-    setIsProcessingCheckout(true);
-    try {
-      const token = await getToken();
-      let saleResponse: any = null;
-      if (token) {
-        saleResponse = await tendoApi.createSale(token, {
-          items: items.map((i) => ({
-            productId: i.id,
-            quantity: i.quantity,
-          })),
-        });
-        queryClient.invalidateQueries({ queryKey: ["products"] });
-      }
-
-      const paidTotal = totals.total;
-      const currentTicket =
-        saleResponse?.id?.slice(-6)?.toUpperCase() || ticketNumber;
-
-      Alert.alert(
-        "¡Venta Cobrada con Éxito!",
-        `Ticket: ${currentTicket}\nTotal: $${paidTotal.toFixed(2)}\nCliente: ${customer.name}`,
-        [
-          {
-            text: "Aceptar",
-            onPress: () => {
-              resetTicket();
-              closeDrawer();
-              onCheckoutSuccess?.(currentTicket, paidTotal);
-            },
-          },
-        ],
-      );
-    } catch (err: any) {
-      Alert.alert(
-        "Error al procesar la venta",
-        err?.message || "Ocurrió un error al registrar la venta en el servidor.",
-        [{ text: "Aceptar" }],
-      );
-    } finally {
-      setIsProcessingCheckout(false);
-    }
+    setIsCheckoutModalOpen(true);
   };
 
   const handleGoToTerminal = () => {
@@ -213,20 +175,36 @@ export default function OrderDrawer({ onCheckoutSuccess }: OrderDrawerProps) {
         {/* Discount Row */}
         <View className="flex-col gap-1">
           <View className="flex-row items-center justify-between">
-            <TouchableOpacity
-              onPress={() => setShowDiscountSelector(!showDiscountSelector)}
-              activeOpacity={0.7}
-              className="flex-row items-center gap-1"
-            >
-              <Text className="text-xs text-primary font-semibold">
-                Descuento {globalDiscountPercent > 0 ? `(${globalDiscountPercent}%)` : ""}
-              </Text>
-              <MaterialIcons
-                name={showDiscountSelector ? "expand-less" : "expand-more"}
-                size={14}
-                color="#c0c1ff"
-              />
-            </TouchableOpacity>
+            <View className="flex-row items-center gap-1.5">
+              <TouchableOpacity
+                onPress={() => setShowDiscountSelector(!showDiscountSelector)}
+                activeOpacity={0.7}
+                className="flex-row items-center gap-1"
+              >
+                <Text className="text-xs text-primary font-semibold">
+                  {totals.discountAmount > 0
+                    ? `Descuento (-$${totals.discountAmount.toFixed(2)})`
+                    : "Descuento"}
+                </Text>
+                <MaterialIcons
+                  name={showDiscountSelector ? "expand-less" : "expand-more"}
+                  size={14}
+                  color="#c0c1ff"
+                />
+              </TouchableOpacity>
+
+              {totals.discountAmount > 0 && (
+                <TouchableOpacity
+                  onPress={() => {
+                    setDiscount(0);
+                    setShowDiscountSelector(false);
+                  }}
+                  className="w-3.5 h-3.5 rounded-full bg-surface-container-highest items-center justify-center"
+                >
+                  <MaterialIcons name="close" size={9} color="#ffb4ab" />
+                </TouchableOpacity>
+              )}
+            </View>
 
             <Text
               className={`text-xs font-mono ${
@@ -241,45 +219,46 @@ export default function OrderDrawer({ onCheckoutSuccess }: OrderDrawerProps) {
             </Text>
           </View>
 
-          {/* Quick Discount Selector Pills */}
+          {/* Quick Discount Selector Panel */}
           {showDiscountSelector && (
-            <View className="flex-row items-center gap-1.5 py-1">
-              {discountOptions.map((opt) => (
-                <TouchableOpacity
-                  key={opt}
-                  onPress={() => {
-                    setGlobalDiscountPercent(opt);
-                    setShowDiscountSelector(false);
-                  }}
-                  className={`px-2 py-0.5 rounded-lg border text-xs ${
-                    globalDiscountPercent === opt
-                      ? "bg-primary border-primary"
-                      : "bg-surface-container-high border-surface-container-highest/60 hover:bg-surface-bright"
-                  }`}
-                >
-                  <Text
-                    className={`text-[10px] font-semibold ${
-                      globalDiscountPercent === opt
-                        ? "text-on-primary font-bold"
-                        : "text-on-surface-variant"
-                    }`}
-                  >
-                    {opt === 0 ? "0%" : `${opt}%`}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+            <View className="p-2 rounded-xl bg-surface-container border border-surface-container-high gap-1.5 my-0.5">
+              <Text className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
+                Monto de descuento ($)
+              </Text>
+              <View className="flex-row items-center gap-1 flex-wrap">
+                {fixedOptions.map((opt) => {
+                  const isSelected =
+                    opt === 0
+                      ? totals.discountAmount === 0
+                      : Math.abs(totals.discountAmount - opt) < 0.01;
+                  return (
+                    <TouchableOpacity
+                      key={opt}
+                      onPress={() => {
+                        setDiscount(opt);
+                        if (opt === 0) setShowDiscountSelector(false);
+                      }}
+                      className={`px-2 py-0.5 rounded-md border text-xs ${
+                        isSelected
+                          ? "bg-primary border-primary"
+                          : "bg-surface-container-high border-surface-container-highest/60 hover:bg-surface-bright"
+                      }`}
+                    >
+                      <Text
+                        className={`text-[10px] font-semibold ${
+                          isSelected
+                            ? "text-on-primary font-bold"
+                            : "text-on-surface-variant"
+                        }`}
+                      >
+                        {opt === 0 ? "Sin desc." : `$${opt}`}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             </View>
           )}
-        </View>
-
-        {/* Taxes */}
-        <View className="flex-row items-center justify-between">
-          <Text className="text-xs text-on-surface-variant font-medium">
-            IVA (16%)
-          </Text>
-          <Text className="text-xs font-semibold font-mono text-on-surface-variant">
-            ${totals.taxAmount.toFixed(2)}
-          </Text>
         </View>
 
         <View className="h-[1px] bg-surface-container-high my-1" />
@@ -289,9 +268,6 @@ export default function OrderDrawer({ onCheckoutSuccess }: OrderDrawerProps) {
           <View>
             <Text className="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">
               Total Pedido
-            </Text>
-            <Text className="text-[10px] text-on-surface-variant">
-              IVA incluido
             </Text>
           </View>
 
@@ -306,11 +282,11 @@ export default function OrderDrawer({ onCheckoutSuccess }: OrderDrawerProps) {
 
       {/* Main Checkout Button */}
       <TouchableOpacity
-        onPress={handleCheckout}
-        disabled={items.length === 0 || isProcessingCheckout}
+        onPress={handleOpenCheckout}
+        disabled={items.length === 0}
         activeOpacity={0.85}
         className={`w-full py-3 px-4 rounded-xl flex-row items-center justify-between shadow-md ${
-          items.length > 0 && !isProcessingCheckout
+          items.length > 0
             ? "bg-primary active:scale-[0.99]"
             : "bg-surface-container-highest opacity-40"
         }`}
@@ -326,7 +302,7 @@ export default function OrderDrawer({ onCheckoutSuccess }: OrderDrawerProps) {
               items.length > 0 ? "text-on-primary" : "text-on-surface-variant"
             }`}
           >
-            {isProcessingCheckout ? "Procesando..." : "Cobrar Pedido"}
+            Cobrar Pedido
           </Text>
         </View>
 
@@ -627,6 +603,16 @@ export default function OrderDrawer({ onCheckoutSuccess }: OrderDrawerProps) {
           if (editingQuantityItem) {
             updateQuantity(editingQuantityItem.id, newQty);
           }
+        }}
+      />
+
+      {/* Complete Checkout & Payment Modal */}
+      <CheckoutModal
+        visible={isCheckoutModalOpen}
+        onClose={() => setIsCheckoutModalOpen(false)}
+        onCheckoutSuccess={(sale) => {
+          closeDrawer();
+          onCheckoutSuccess?.(sale.id, sale.total);
         }}
       />
     </>

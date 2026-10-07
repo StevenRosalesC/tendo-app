@@ -18,6 +18,7 @@ import useCartStore from "../../stores/useCartStore";
 import CartHeader from "./CartHeader";
 import CartItemRow from "./CartItemRow";
 import CartSummary from "./CartSummary";
+import CheckoutModal from "./CheckoutModal";
 import QuantityEditModal from "./QuantityEditModal";
 import SelectProductModal from "./SelectProductModal";
 import { CartItem } from "./types";
@@ -37,7 +38,6 @@ export default function TerminalCart({
     items,
     customer,
     ticketNumber,
-    globalDiscountPercent,
     addItem,
     removeItem,
     updateQuantity,
@@ -45,7 +45,6 @@ export default function TerminalCart({
     decrementQuantity,
     clearCart,
     setCustomer,
-    setGlobalDiscountPercent,
     resetTicket,
     getTotals,
   } = useCartStore();
@@ -55,7 +54,7 @@ export default function TerminalCart({
   const [editingQuantityItem, setEditingQuantityItem] = useState<CartItem | null>(null);
   const [barcodeInput, setBarcodeInput] = useState("");
   const [isSearchingBarcode, setIsSearchingBarcode] = useState(false);
-  const [isProcessingCheckout, setIsProcessingCheckout] = useState(false);
+  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
 
   const barcodeInputRef = useRef<TextInput | null>(null);
   const totals = getTotals();
@@ -71,16 +70,16 @@ export default function TerminalCart({
       } else if (
         (e.key === "F12" || (e.key === "Enter" && (e.ctrlKey || e.metaKey))) &&
         items.length > 0 &&
-        !isProcessingCheckout
+        !isCheckoutModalOpen
       ) {
         e.preventDefault();
-        handleCheckout();
+        setIsCheckoutModalOpen(true);
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [items, isProcessingCheckout, totals, customer, ticketNumber]);
+  }, [items, isCheckoutModalOpen]);
 
   const handleScanBarcode = async (barcode: string) => {
     const code = barcode.trim();
@@ -139,49 +138,9 @@ export default function TerminalCart({
     );
   };
 
-  const handleCheckout = async () => {
-    if (items.length === 0 || isProcessingCheckout) return;
-
-    setIsProcessingCheckout(true);
-    try {
-      const token = await getToken();
-      let saleResponse: any = null;
-      if (token) {
-        saleResponse = await tendoApi.createSale(token, {
-          items: items.map((i) => ({
-            productId: i.id,
-            quantity: i.quantity,
-          })),
-        });
-        queryClient.invalidateQueries({ queryKey: ["products"] });
-      }
-
-      const paidTotal = totals.total;
-      const currentTicket =
-        saleResponse?.id?.slice(-6)?.toUpperCase() || ticketNumber;
-
-      Alert.alert(
-        "¡Venta Cobrada con Éxito!",
-        `Ticket: ${currentTicket}\nTotal: $${paidTotal.toFixed(2)}\nCliente: ${customer.name}`,
-        [
-          {
-            text: "Nueva Venta",
-            onPress: () => {
-              resetTicket();
-              onCheckoutSuccess?.(currentTicket, paidTotal);
-            },
-          },
-        ],
-      );
-    } catch (err: any) {
-      Alert.alert(
-        "Error al procesar la venta",
-        err?.message || "Ocurrió un error al registrar la venta en el servidor.",
-        [{ text: "Aceptar" }],
-      );
-    } finally {
-      setIsProcessingCheckout(false);
-    }
+  const handleOpenCheckout = () => {
+    if (items.length === 0) return;
+    setIsCheckoutModalOpen(true);
   };
 
   const handleCustomerPress = () => {
@@ -343,11 +302,9 @@ export default function TerminalCart({
         {/* Cart Financial Summary & Checkout Footer */}
         <CartSummary
           totals={totals}
-          discountPercent={globalDiscountPercent}
-          onDiscountChange={setGlobalDiscountPercent}
-          onCheckout={handleCheckout}
+          onCheckout={handleOpenCheckout}
           onClear={handleConfirmClear}
-          isLoading={isProcessingCheckout}
+          isLoading={false}
         />
       </View>
 
@@ -373,6 +330,15 @@ export default function TerminalCart({
           if (editingQuantityItem) {
             updateQuantity(editingQuantityItem.id, newQty);
           }
+        }}
+      />
+
+      {/* Complete Checkout & Payment Modal */}
+      <CheckoutModal
+        visible={isCheckoutModalOpen}
+        onClose={() => setIsCheckoutModalOpen(false)}
+        onCheckoutSuccess={(sale) => {
+          onCheckoutSuccess?.(sale.id, sale.total);
         }}
       />
     </View>
