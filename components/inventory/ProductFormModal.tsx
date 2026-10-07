@@ -122,6 +122,18 @@ export default function ProductFormModal({
   const currentUnitObj =
     PRODUCT_UNITS.find((u) => u.value === unit) || PRODUCT_UNITS[0];
 
+  const applyStockDelta = (delta: number) => {
+    const current = parseFloat(stock) || 0;
+    const next = Math.max(0, +(current + delta).toFixed(3));
+    setStock(String(next));
+  };
+
+  const isDecimalUnit = unit !== "UNIT";
+
+  const quickStockDeltas = isDecimalUnit
+    ? [+0.5, +1, +5, +10, -1, -5]
+    : [+1, +5, +10, +25, -1, -5];
+
   // Mutation for Create / Update Product
   const mutation = useMutation({
     mutationFn: async () => {
@@ -494,16 +506,53 @@ export default function ProductFormModal({
           </View>
         )}
 
-        {/* Initial Stock Input (or unlimited note) */}
+        {/* Stock Input & Quick Adjust Controls */}
         {trackStock ? (
-          <Input
-            label={`Stock Inicial (${currentUnitObj.short})`}
-            iconName="warehouse"
-            value={stock}
-            onChangeText={setStock}
-            placeholder="0"
-            keyboardType="decimal-pad"
-          />
+          <View className="gap-2">
+            <Input
+              label={
+                isEditMode
+                  ? `Existencias en Almacén (${currentUnitObj.short}) *`
+                  : `Stock Inicial (${currentUnitObj.short})`
+              }
+              iconName="warehouse"
+              value={stock}
+              onChangeText={setStock}
+              placeholder="0"
+              keyboardType="decimal-pad"
+            />
+
+            {/* Quick Adjustment Pills (Especially convenient when editing products) */}
+            {isEditMode && (
+              <View className="gap-1 mt-0.5">
+                <Text className="text-[11px] font-medium text-on-surface-variant">
+                  Ajuste rápido de unidades recibidas / mermas:
+                </Text>
+                <View className="flex-row flex-wrap gap-1.5">
+                  {quickStockDeltas.map((delta) => (
+                    <TouchableOpacity
+                      key={delta}
+                      onPress={() => applyStockDelta(delta)}
+                      activeOpacity={0.7}
+                      className={`px-2.5 py-1 rounded-lg border ${
+                        delta > 0
+                          ? "bg-primary/10 border-primary/30"
+                          : "bg-error/10 border-error/30"
+                      }`}
+                    >
+                      <Text
+                        className={`text-xs font-bold font-mono ${
+                          delta > 0 ? "text-primary" : "text-error"
+                        }`}
+                      >
+                        {delta > 0 ? `+${delta}` : delta} {currentUnitObj.short}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            )}
+          </View>
         ) : (
           <View className="p-3 rounded-2xl bg-surface-container-high/40 border border-surface-container-highest/40 flex-row items-center gap-2">
             <MaterialIcons name="all-inclusive" size={16} color="#c0c1ff" />

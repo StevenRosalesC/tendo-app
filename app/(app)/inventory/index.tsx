@@ -1,11 +1,12 @@
 import { MaterialIcons } from "@expo/vector-icons";
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   Platform,
   RefreshControl,
   ScrollView,
+  Share,
   Text,
   TouchableOpacity,
   useWindowDimensions,
@@ -20,12 +21,8 @@ import InventoryTable from "../../../components/inventory/InventoryTable";
 import InventoryToolbar from "../../../components/inventory/InventoryToolbar";
 import ProductDetailModal from "../../../components/inventory/ProductDetailModal";
 import ProductFormModal from "../../../components/inventory/ProductFormModal";
-import StockAdjustModal from "../../../components/inventory/StockAdjustModal";
 import DeleteProductModal from "../../../components/inventory/DeleteProductModal";
 import { BarcodeScannerModal } from "../../../components/ui/BarcodeScanner";
-import {
-  initialKpis,
-} from "../../../components/inventory/mockData";
 import { Product } from "../../../components/inventory/types";
 import { useAuth } from "@clerk/expo";
 import { useQuery } from "@tanstack/react-query";
@@ -37,14 +34,13 @@ export default function InventoryScreen() {
   const isMobile = windowWidth > 0 && windowWidth < 768;
   const isInitialMount = useRef(true);
 
-  const [availabilityOverrides, setAvailabilityOverrides] = useState<
-    Record<string, boolean>
-  >({});
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [debouncedSearch, setDebouncedSearch] = useState<string>("");
   const [inStockOnly, setInStockOnly] = useState<boolean | undefined>(undefined);
+  const [criticalStockOnly, setCriticalStockOnly] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<"table" | "grid">(isMobile ? "grid" : "table");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isExporting, setIsExporting] = useState<boolean>(false);
 
   // Default to grid on mobile on first mount
   useEffect(() => {
@@ -72,11 +68,14 @@ export default function InventoryScreen() {
     setCurrentPage(1);
   };
 
+  const handleToggleCriticalFilter = () => {
+    setCriticalStockOnly((prev) => !prev);
+    setCurrentPage(1);
+  };
+
   // CRUD Modals state
   const [isFormModalOpen, setIsFormModalOpen] = useState<boolean>(false);
   const [productToEdit, setProductToEdit] = useState<Product | null>(null);
-  const [isStockModalOpen, setIsStockModalOpen] = useState<boolean>(false);
-  const [productToAdjust, setProductToAdjust] = useState<Product | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
@@ -91,12 +90,31 @@ export default function InventoryScreen() {
     setIsScannerModalOpen(false);
   };
 
+  // 1. Live Valuation Metrics Query
+  const {
+    data: valuationData,
+    isLoading: isValuationLoading,
+    refetch: refetchValuation,
+  } = useQuery({
+    queryKey: ["inventory-valuation"],
+    queryFn: async () => {
+      const token = await getToken();
+      if (!token) throw new Error("No active Clerk session token available");
+      try {
+        return await tendoApi.getInventoryValuation(token);
+      } catch (err: any) {
+        // If forbidden (e.g. Cashier role without reports access), return empty
+        return null;
+      }
+    },
+  });
+
+  // 2. Paginated Products Catalog Query
   const {
     data: productsResponse,
     isLoading,
     isRefetching,
-    isError,
-    refetch,
+    refetch: refetchProducts,
   } = useQuery({
     queryKey: [
       "products",
@@ -105,6 +123,7 @@ export default function InventoryScreen() {
         limit: rowsPerPage,
         search: debouncedSearch,
         inStock: inStockOnly,
+        lowStock: criticalStockOnly || undefined,
       },
     ],
     queryFn: async () => {
@@ -115,6 +134,7 @@ export default function InventoryScreen() {
         limit: rowsPerPage,
         search: debouncedSearch || undefined,
         inStock: inStockOnly,
+        lowStock: criticalStockOnly ? true : undefined,
       });
     },
   });
@@ -137,16 +157,12 @@ export default function InventoryScreen() {
           hasPreviousPage: false,
         };
 
-  // Derived products from backend response with local availability overrides
+  // Clean products derived strictly from live backend data
   const products: Product[] = useMemo(() => {
     if (!rawProducts || rawProducts.length === 0) return [];
     return rawProducts.map((p: any) => {
       const isTracked = p.trackStock !== false;
-      const isAvailable =
-        availabilityOverrides[p.id] !== undefined
-          ? availabilityOverrides[p.id]
-          : !isTracked || (p.stock ?? 0) > 0;
-
+      const isAvailable = !isTracked || (p.stock ?? 0) > 0;
       const price = Number(p.price) || 0;
       const costPrice = p.costPrice !== undefined ? Number(p.costPrice) : 0;
       const profit = price - costPrice;
@@ -176,7 +192,7 @@ export default function InventoryScreen() {
       return {
         id: p.id,
         name: p.name,
-        sku: `SKU-${p.barcode ? p.barcode.slice(-4) : "0000"}`,
+        sku: p.barcode ? p.barcode : `SKU-${p.id.slice(0, 6).toUpperCase()}`,
         barcode: p.barcode,
         category: "General",
         stock: p.stock ?? 0,
@@ -189,13 +205,17 @@ export default function InventoryScreen() {
         cost: costPrice,
         margin,
         profit,
-        channels: ["POS", "Web"],
         available: isAvailable,
-        imageUrl:
-          "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120&auto=format&fit=crop&q=80",
+        imageUrl: p.imageUrl || undefined,
       };
     });
-  }, [rawProducts, availabilityOverrides]);
+  }, [rawProducts]);
+
+  // Combined refresh
+  const handleRefreshAll = () => {
+    refetchProducts();
+    refetchValuation();
+  };
 
   // Web keyboard shortcuts listener (F4: Focus search, F3: New product, Escape: Clear)
   useEffect(() => {
@@ -229,9 +249,6 @@ export default function InventoryScreen() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Server-filtered products
-  const filteredProducts = products;
-
   // Handlers for product interactions
   const handleToggleSelect = (id: string) => {
     setSelectedIds((prev) =>
@@ -241,37 +258,14 @@ export default function InventoryScreen() {
 
   const handleToggleSelectAll = () => {
     const allFilteredSelected =
-      filteredProducts.length > 0 &&
-      filteredProducts.every((p) => selectedIds.includes(p.id));
+      products.length > 0 &&
+      products.every((p) => selectedIds.includes(p.id));
 
     if (allFilteredSelected) {
       setSelectedIds([]);
     } else {
-      setSelectedIds(filteredProducts.map((p) => p.id));
+      setSelectedIds(products.map((p) => p.id));
     }
-  };
-
-  const handleToggleAvailability = (id: string) => {
-    setAvailabilityOverrides((prev) => ({
-      ...prev,
-      [id]: !products.find((p) => p.id === id)?.available,
-    }));
-  };
-
-  const handleQuickAddStock = (id: string) => {
-    const target = products.find((p) => p.id === id);
-    if (target) {
-      setProductToAdjust(target);
-      setIsStockModalOpen(true);
-    }
-  };
-
-  const handlePrintBarcode = (id: string) => {
-    const target = products.find((p) => p.id === id);
-    Alert.alert(
-      "Imprimir Etiqueta",
-      `Enviando código de barras ${target?.barcode} a la impresora térmica de tickets...`,
-    );
   };
 
   const handleEditProduct = (id: string) => {
@@ -295,34 +289,73 @@ export default function InventoryScreen() {
     setIsFormModalOpen(true);
   };
 
-  const handleQuickAdjust = () => {
-    if (products.length > 0) {
-      const target =
-        products.find((p) => selectedIds.includes(p.id)) || products[0];
-      setProductToAdjust(target);
-      setIsStockModalOpen(true);
-    } else {
-      handleNewProduct();
-    }
-  };
+  // Real CSV Catalog Exporter
+  const handleExportCsv = async () => {
+    try {
+      setIsExporting(true);
+      const token = await getToken();
+      if (!token) throw new Error("No hay una sesión activa de Clerk");
 
-  const handleImportExport = () => {
-    Alert.alert(
-      "Importar / Exportar",
-      "Soporta CSV de catálogo, sincronización de artículos y archivo de inventario.",
-    );
-  };
+      const res = await tendoApi.getProducts(token, { page: 1, limit: 1000 });
+      const items = Array.isArray(res) ? res : res?.data || [];
 
-  const handleReorderCritical = () => {
-    const lowStockItem = products.find((p) => p.stock <= 5);
-    if (lowStockItem) {
-      setProductToAdjust(lowStockItem);
-      setIsStockModalOpen(true);
-    } else {
-      Alert.alert(
-        "Nivel Óptimo",
-        "Todos los artículos cuentan con inventario por encima del umbral mínimo.",
-      );
+      if (items.length === 0) {
+        Alert.alert("Catálogo Vacío", "No existen productos registrados para exportar.");
+        return;
+      }
+
+      const headers = [
+        "ID",
+        "Nombre",
+        "Codigo_Barras",
+        "Precio_Venta",
+        "Costo_Adquisicion",
+        "Stock_Actual",
+        "Unidad",
+        "Control_Stock",
+      ];
+
+      const csvRows = [
+        headers.join(","),
+        ...items.map((it: any) => {
+          const escapedName = `"${(it.name || "").replace(/"/g, '""')}"`;
+          return [
+            it.id,
+            escapedName,
+            it.barcode || "",
+            Number(it.price || 0).toFixed(2),
+            Number(it.costPrice || 0).toFixed(2),
+            it.stock ?? 0,
+            it.unit || "UNIT",
+            it.trackStock !== false ? "SI" : "NO",
+          ].join(",");
+        }),
+      ];
+
+      const csvString = csvRows.join("\n");
+
+      if (Platform.OS === "web") {
+        const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute(
+          "download",
+          `catalogo_tendo_${new Date().toISOString().slice(0, 10)}.csv`,
+        );
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        await Share.share({
+          message: csvString,
+          title: "Catálogo de Inventario Tendo",
+        });
+      }
+    } catch (err: any) {
+      Alert.alert("Error al exportar", err?.message || "No se pudo generar el archivo CSV");
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -334,26 +367,28 @@ export default function InventoryScreen() {
       refreshControl={
         <RefreshControl
           refreshing={isRefetching}
-          onRefresh={() => refetch()}
+          onRefresh={handleRefreshAll}
           tintColor="#c0c1ff"
           colors={["#c0c1ff"]}
         />
       }
     >
-      {/* 1. Header & Quick Actions Bar */}
+      {/* 1. Header & Primary/Secondary Actions */}
       <InventoryHeader
         totalProducts={paginationMeta.total}
         onNewProduct={handleNewProduct}
-        onQuickAdjust={handleQuickAdjust}
-        onImportExport={handleImportExport}
-        onRefresh={() => refetch()}
+        onExportCsv={handleExportCsv}
+        isExporting={isExporting}
+        onRefresh={handleRefreshAll}
         isRefreshing={isRefetching}
       />
 
-      {/* 2. Inventory KPIs Grid */}
+      {/* 2. Live Inventory KPIs Grid */}
       <InventoryKpiGrid
-        data={initialKpis}
-        onReorderCritical={handleReorderCritical}
+        data={valuationData}
+        isLoading={isValuationLoading}
+        isCriticalFilterActive={criticalStockOnly}
+        onToggleCriticalFilter={handleToggleCriticalFilter}
       />
 
       {/* 3. API-Supported Filter & Search Toolbar */}
@@ -376,7 +411,7 @@ export default function InventoryScreen() {
           </Text>
         </View>
       ) : products.length === 0 ? (
-        debouncedSearch.trim().length > 0 || inStockOnly !== undefined ? (
+        debouncedSearch.trim().length > 0 || inStockOnly !== undefined || criticalStockOnly ? (
           <View className="p-6 sm:p-12 bg-surface-container-low rounded-2xl border border-dashed border-surface-container-high items-center justify-center gap-3 my-2 sm:my-4">
             <View className="w-14 h-14 rounded-2xl bg-surface-container-high items-center justify-center">
               <MaterialIcons name="search-off" size={28} color="#c7c4d7" />
@@ -387,21 +422,35 @@ export default function InventoryScreen() {
             <Text className="text-xs text-on-surface-variant max-w-sm text-center">
               {debouncedSearch.trim().length > 0
                 ? `No hay coincidencias para "${debouncedSearch.trim()}". Intenta con otro término o código de barras.`
+                : criticalStockOnly
+                ? "No hay productos en estado de stock bajo o crítico."
                 : "No se encontraron productos coincidentes con los filtros aplicados."}
             </Text>
-            {debouncedSearch.trim().length > 0 && (
-              <TouchableOpacity
-                onPress={() => {
-                  setSearchQuery("");
-                  setDebouncedSearch("");
-                }}
-                className="mt-1 bg-surface-container-high border border-surface-container-highest/60 px-4 py-2 rounded-xl"
-              >
-                <Text className="text-xs font-semibold text-on-surface">
-                  Limpiar búsqueda
-                </Text>
-              </TouchableOpacity>
-            )}
+            <View className="flex-row items-center gap-2 mt-1">
+              {criticalStockOnly && (
+                <TouchableOpacity
+                  onPress={() => setCriticalStockOnly(false)}
+                  className="bg-primary/20 border border-primary/40 px-3.5 py-2 rounded-xl"
+                >
+                  <Text className="text-xs font-semibold text-secondary">
+                    Quitar filtro crítico
+                  </Text>
+                </TouchableOpacity>
+              )}
+              {debouncedSearch.trim().length > 0 && (
+                <TouchableOpacity
+                  onPress={() => {
+                    setSearchQuery("");
+                    setDebouncedSearch("");
+                  }}
+                  className="bg-surface-container-high border border-surface-container-highest/60 px-4 py-2 rounded-xl"
+                >
+                  <Text className="text-xs font-semibold text-on-surface">
+                    Limpiar búsqueda
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
         ) : (
           <View className="p-6 sm:p-12 bg-surface-container-low rounded-2xl border border-dashed border-surface-container-high items-center justify-center gap-3 my-2 sm:my-4">
@@ -426,13 +475,10 @@ export default function InventoryScreen() {
         )
       ) : viewMode === "table" ? (
         <InventoryTable
-          products={filteredProducts}
+          products={products}
           selectedIds={selectedIds}
           onToggleSelect={handleToggleSelect}
           onToggleSelectAll={handleToggleSelectAll}
-          onToggleAvailability={handleToggleAvailability}
-          onQuickAddStock={handleQuickAddStock}
-          onPrintBarcode={handlePrintBarcode}
           onEditProduct={handleEditProduct}
           onMoreOptions={handleMoreOptions}
           currentPage={paginationMeta.page}
@@ -447,12 +493,9 @@ export default function InventoryScreen() {
         />
       ) : (
         <InventoryGrid
-          products={filteredProducts}
+          products={products}
           selectedIds={selectedIds}
           onToggleSelect={handleToggleSelect}
-          onToggleAvailability={handleToggleAvailability}
-          onQuickAddStock={handleQuickAddStock}
-          onPrintBarcode={handlePrintBarcode}
           onEditProduct={handleEditProduct}
           onMoreOptions={handleMoreOptions}
           currentPage={paginationMeta.page}
@@ -480,17 +523,7 @@ export default function InventoryScreen() {
         productToEdit={productToEdit}
       />
 
-      {/* 7. Stock Adjust Modal (WebSockets real-time) */}
-      <StockAdjustModal
-        visible={isStockModalOpen}
-        onClose={() => {
-          setIsStockModalOpen(false);
-          setProductToAdjust(null);
-        }}
-        product={productToAdjust}
-      />
-
-      {/* 8. Product Detail Modal */}
+      {/* 7. Product Detail Modal */}
       <ProductDetailModal
         visible={isDetailModalOpen}
         onClose={() => {
@@ -501,10 +534,6 @@ export default function InventoryScreen() {
         onEdit={(prod) => {
           setProductToEdit(prod);
           setIsFormModalOpen(true);
-        }}
-        onAdjustStock={(prod) => {
-          setProductToAdjust(prod);
-          setIsStockModalOpen(true);
         }}
         onDelete={(prod) => {
           setProductToDelete(prod);

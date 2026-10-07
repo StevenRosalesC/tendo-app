@@ -12,7 +12,6 @@ export interface ProductDetailModalProps {
   onClose: () => void;
   product?: Product | null;
   onEdit?: (product: Product) => void;
-  onAdjustStock?: (product: Product) => void;
   onDelete?: (product: Product) => void;
 }
 
@@ -31,7 +30,6 @@ export default function ProductDetailModal({
   onClose,
   product,
   onEdit,
-  onAdjustStock,
   onDelete,
 }: ProductDetailModalProps) {
   const isManagerOrAdmin = useAuthStore((s) => s.isManager());
@@ -129,7 +127,7 @@ export default function ProductDetailModal({
             <Text className="text-[10px] text-on-surface-variant mt-1">
               {!isTracked
                 ? "Venta libre sin descuento de inventario"
-                : "Almacén Principal Condesa"}
+                : "Control de inventario activo"}
             </Text>
           </View>
         </View>
@@ -210,18 +208,6 @@ export default function ProductDetailModal({
           />
 
           <View className="flex-row items-center gap-2">
-            {isTracked && (
-              <Button
-                label="Ajustar Stock"
-                variant="secondary"
-                leftIcon={<MaterialIcons name="swap-vert" size={16} color="#c0c1ff" />}
-                onPress={() => {
-                  onClose();
-                  onAdjustStock?.(product);
-                }}
-              />
-            )}
-
             <Button
               label="Editar"
               leftIcon={<MaterialIcons name="edit" size={16} color="#0d0096" />}
