@@ -6,8 +6,8 @@ export interface InventoryHeaderProps {
   totalProducts?: number;
   totalCategories?: number;
   onNewProduct?: () => void;
-  onQuickAdjust?: () => void;
-  onImportExport?: () => void;
+  onExportCsv?: () => void;
+  isExporting?: boolean;
   onRefresh?: () => void;
   isRefreshing?: boolean;
 }
@@ -16,8 +16,8 @@ export default function InventoryHeader({
   totalProducts = 0,
   totalCategories,
   onNewProduct,
-  onQuickAdjust,
-  onImportExport,
+  onExportCsv,
+  isExporting = false,
   onRefresh,
   isRefreshing = false,
 }: InventoryHeaderProps) {
@@ -70,7 +70,7 @@ export default function InventoryHeader({
         )}
       </View>
 
-      {/* Secondary Actions: Quick Adjust, Import/Export, Refresh */}
+      {/* Secondary Actions: Quick Adjust, Export CSV, Refresh */}
       <View className="w-full">
         <ScrollView
           horizontal
@@ -96,30 +96,21 @@ export default function InventoryHeader({
             </TouchableOpacity>
           )}
 
-          {/* Quick Stock Adjust Button */}
-          {onQuickAdjust && (
+          {/* Export CSV */}
+          {onExportCsv && (
             <TouchableOpacity
-              onPress={onQuickAdjust}
+              onPress={onExportCsv}
+              disabled={isExporting}
               activeOpacity={0.8}
               className="h-8 sm:h-9 px-2.5 sm:px-3 rounded-lg sm:rounded-xl bg-surface-container-high border border-surface-container-highest/60 hover:bg-surface-bright flex-row items-center gap-1.5 shadow-xs"
             >
-              <MaterialIcons name="tune" size={15} color="#c7c4d7" />
+              {isExporting ? (
+                <ActivityIndicator size="small" color="#c0c1ff" />
+              ) : (
+                <MaterialIcons name="file-download" size={15} color="#c7c4d7" />
+              )}
               <Text className="text-xs font-semibold text-on-surface">
-                Ajuste Rápido
-              </Text>
-            </TouchableOpacity>
-          )}
-
-          {/* Import / Export CSV */}
-          {onImportExport && (
-            <TouchableOpacity
-              onPress={onImportExport}
-              activeOpacity={0.8}
-              className="h-8 sm:h-9 px-2.5 sm:px-3 rounded-lg sm:rounded-xl bg-surface-container-high border border-surface-container-highest/60 hover:bg-surface-bright flex-row items-center gap-1.5 shadow-xs"
-            >
-              <MaterialIcons name="swap-vert" size={15} color="#c7c4d7" />
-              <Text className="text-xs font-semibold text-on-surface">
-                Importar / Exportar
+                {isExporting ? "Generando..." : "Exportar CSV"}
               </Text>
             </TouchableOpacity>
           )}

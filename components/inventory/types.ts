@@ -21,9 +21,9 @@ export interface Product {
   profit?: number;
   unit?: ProductUnit;
   trackStock?: boolean;
-  channels: ChannelType[];
+  channels?: ChannelType[];
   available: boolean;
-  imageUrl: string;
+  imageUrl?: string;
   imageAlt?: string;
 }
 
@@ -35,24 +35,11 @@ export interface InventoryCategoryFilter {
 }
 
 export interface InventoryKpiData {
-  valuation: {
-    total: number;
-    trend: string;
-    trendLabel: string;
-  };
-  criticalStock: {
-    count: number;
-    requiresPurchaseText: string;
-    depletedTodayText: string;
-  };
-  bestSeller: {
-    name: string;
-    units: number;
-    revenue: number;
-  };
-  sync: {
-    percentage: number;
-    latencyMs: number;
-    conflictCount: number;
-  };
+  totalProducts: number;
+  totalUnitsInStock: number;
+  totalInventoryCost: number;
+  totalInventoryRetail: number;
+  potentialProfit: number;
+  criticalStockCount?: number;
+  outOfStockCount?: number;
 }

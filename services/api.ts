@@ -88,6 +88,17 @@ export interface GetProductsParams {
   limit?: number;
   search?: string;
   inStock?: boolean;
+  lowStock?: boolean;
+}
+
+export interface InventoryValuationData {
+  totalProducts: number;
+  totalUnitsInStock: number;
+  totalInventoryCost: number;
+  totalInventoryRetail: number;
+  potentialProfit: number;
+  criticalStockCount?: number;
+  outOfStockCount?: number;
 }
 
 export interface SaleProductInfo {
@@ -179,8 +190,20 @@ export const tendoApi = {
     if (typeof params?.inStock === "boolean") {
       query.append("inStock", String(params.inStock));
     }
+    if (typeof params?.lowStock === "boolean") {
+      query.append("lowStock", String(params.lowStock));
+    }
     const qs = query.toString();
     return apiRequest<PaginatedResponse<any>>(`/products${qs ? `?${qs}` : ""}`, token, {
+      method: "GET",
+    });
+  },
+
+  /**
+   * Get store inventory valuation metrics (cost, retail, potential profit)
+   */
+  getInventoryValuation: (token: string) => {
+    return apiRequest<InventoryValuationData>("/products/inventory/valuation", token, {
       method: "GET",
     });
   },
