@@ -1,6 +1,7 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import React from "react";
 import { Alert, Text, TouchableOpacity, View } from "react-native";
+import useAuthStore from "../../stores/useAuthStore";
 import Badge from "../ui/Badge";
 import Button from "../ui/Button";
 import Modal from "../ui/Modal";
@@ -15,6 +16,16 @@ export interface ProductDetailModalProps {
   onDelete?: (product: Product) => void;
 }
 
+const UNIT_SHORT: Record<string, string> = {
+  UNIT: "pz",
+  KG: "kg",
+  LB: "lb",
+  G: "g",
+  L: "L",
+  ML: "ml",
+  M: "m",
+};
+
 export default function ProductDetailModal({
   visible,
   onClose,
@@ -23,10 +34,16 @@ export default function ProductDetailModal({
   onAdjustStock,
   onDelete,
 }: ProductDetailModalProps) {
+  const isManagerOrAdmin = useAuthStore((s) => s.isManager());
+
   if (!product) return null;
 
-  const isOutOfStock = product.stock <= 0;
-  const isLowStock = product.stock > 0 && product.stock <= 5;
+  const isTracked = product.trackStock !== false;
+  const isOutOfStock = isTracked && product.stock <= 0;
+  const isLowStock = isTracked && product.stock > 0 && product.stock <= 5;
+  const unitSuffix = product.unit ? UNIT_SHORT[product.unit] || "pz" : "pz";
+  const costPriceVal = product.costPrice ?? product.cost ?? 0;
+  const grossProfit = (product.price || 0) - costPriceVal;
 
   return (
     <Modal
@@ -45,34 +62,50 @@ export default function ProductDetailModal({
               {product.name}
             </Text>
             <Text className="text-xs text-on-surface-variant font-mono mt-0.5">
-              Código / SKU: {product.barcode}
+              {product.barcode ? `Código / SKU: ${product.barcode}` : "Artículo sin código de barras"}
             </Text>
           </View>
 
           <Badge
-            variant={isOutOfStock ? "danger" : isLowStock ? "warning" : "success"}
+            variant={
+              !isTracked
+                ? "info"
+                : isOutOfStock
+                ? "danger"
+                : isLowStock
+                ? "warning"
+                : "success"
+            }
             label={
-              isOutOfStock
+              !isTracked
+                ? "A Granel / Ilimitado"
+                : isOutOfStock
                 ? "Agotado (0)"
                 : isLowStock
-                ? `Bajo Stock (${product.stock})`
-                : `En Stock (${product.stock})`
+                ? `Bajo Stock (${product.stock} ${unitSuffix})`
+                : `En Stock (${product.stock} ${unitSuffix})`
             }
           />
         </View>
 
-        {/* Pricing & Margin Bento Cards */}
+        {/* Pricing & Stock Bento Cards */}
         <View className="flex-row gap-3">
           {/* Price Card */}
           <View className="flex-1 bg-surface-container-low p-4 rounded-2xl border border-surface-container-high/60">
             <Text className="text-[11px] font-semibold text-on-surface-variant uppercase">
               Precio al Público
             </Text>
-            <Text className="text-xl sm:text-2xl font-black text-on-surface mt-1">
+            <Text className="text-xl sm:text-2xl font-black text-on-surface mt-1 font-mono">
               ${product.price?.toFixed(2)}
+              {product.unit && product.unit !== "UNIT" ? (
+                <Text className="text-xs font-normal text-on-surface-variant font-sans">
+                  {" "}
+                  /{unitSuffix}
+                </Text>
+              ) : null}
             </Text>
             <Text className="text-[10px] text-on-surface-variant mt-1">
-              Moneda: MXN • IVA incluido
+              IVA incluido
             </Text>
           </View>
 
@@ -81,33 +114,88 @@ export default function ProductDetailModal({
             <Text className="text-[11px] font-semibold text-on-surface-variant uppercase">
               Existencias en Tienda
             </Text>
-            <Text className="text-xl sm:text-2xl font-black text-primary mt-1">
-              {product.stock} <Text className="text-xs font-normal">uds.</Text>
+            <Text className="text-xl sm:text-2xl font-black text-primary mt-1 font-mono">
+              {!isTracked ? (
+                "Ilimitado"
+              ) : (
+                <>
+                  {product.stock}{" "}
+                  <Text className="text-xs font-normal text-on-surface-variant font-sans">
+                    {unitSuffix}
+                  </Text>
+                </>
+              )}
             </Text>
             <Text className="text-[10px] text-on-surface-variant mt-1">
-              Almacén Principal Condesa
+              {!isTracked
+                ? "Venta libre sin descuento de inventario"
+                : "Almacén Principal Condesa"}
             </Text>
           </View>
         </View>
 
-        {/* Simulated Barcode Banner */}
-        <View className="bg-surface-container-lowest p-4 rounded-2xl border border-surface-container-high items-center justify-center gap-2">
-          {/* Barcode Graphic Stripes */}
-          <View className="flex-row items-center h-12 gap-[3px] bg-white px-6 py-2 rounded-lg">
-            {[2, 4, 1, 3, 2, 5, 1, 4, 3, 2, 1, 4, 2, 3, 5, 2, 1, 4, 3, 2, 4, 1, 3, 2].map(
-              (w, idx) => (
-                <View
-                  key={idx}
-                  style={{ width: w, height: 32 }}
-                  className="bg-black rounded-[0.5px]"
-                />
-              ),
-            )}
+        {/* Cost & Margins (Managers & Admins only) */}
+        {isManagerOrAdmin && (
+          <View className="bg-surface-container-low p-4 rounded-2xl border border-surface-container-high/60 flex-row items-center justify-between">
+            <View>
+              <Text className="text-[11px] font-semibold text-on-surface-variant uppercase">
+                Costo de Adquisición
+              </Text>
+              <Text className="text-base font-bold text-on-surface mt-0.5 font-mono">
+                ${costPriceVal.toFixed(2)}
+              </Text>
+            </View>
+
+            <View className="items-end">
+              <Text className="text-[11px] font-semibold text-on-surface-variant uppercase">
+                Rentabilidad
+              </Text>
+              <View className="flex-row items-center gap-1.5 mt-0.5">
+                <Text className="text-xs font-mono font-bold text-emerald-400">
+                  {grossProfit >= 0
+                    ? `+$${grossProfit.toFixed(2)}`
+                    : `-$${Math.abs(grossProfit).toFixed(2)}`}
+                </Text>
+                <View className="px-2 py-0.5 rounded-full bg-emerald-500/20">
+                  <Text className="text-[11px] font-bold text-emerald-300 font-mono">
+                    {product.margin}% mg
+                  </Text>
+                </View>
+              </View>
+            </View>
           </View>
-          <Text className="text-xs font-mono font-bold tracking-widest text-on-surface">
-            {product.barcode}
-          </Text>
-        </View>
+        )}
+
+        {/* Barcode Banner or Granel Indicator */}
+        {product.barcode ? (
+          <View className="bg-surface-container-lowest p-4 rounded-2xl border border-surface-container-high items-center justify-center gap-2">
+            {/* Barcode Graphic Stripes */}
+            <View className="flex-row items-center h-12 gap-[3px] bg-white px-6 py-2 rounded-lg">
+              {[2, 4, 1, 3, 2, 5, 1, 4, 3, 2, 1, 4, 2, 3, 5, 2, 1, 4, 3, 2, 4, 1, 3, 2].map(
+                (w, idx) => (
+                  <View
+                    key={idx}
+                    style={{ width: w, height: 32 }}
+                    className="bg-black rounded-[0.5px]"
+                  />
+                ),
+              )}
+            </View>
+            <Text className="text-xs font-mono font-bold tracking-widest text-on-surface">
+              {product.barcode}
+            </Text>
+          </View>
+        ) : (
+          <View className="bg-surface-container-lowest p-4 rounded-2xl border border-surface-container-high items-center justify-center gap-1.5">
+            <MaterialIcons name="qr-code-scanner" size={24} color="#908fa0" />
+            <Text className="text-xs text-on-surface-variant text-center font-medium">
+              Producto sin código de barras registrado
+            </Text>
+            <Text className="text-[10px] text-on-surface-variant/70 text-center">
+              Disponible mediante búsqueda manual en terminal POS
+            </Text>
+          </View>
+        )}
 
         {/* Action Buttons Toolbar */}
         <View className="flex-row flex-wrap items-center justify-between gap-3 pt-3 border-t border-surface-container-high/60">
@@ -122,15 +210,17 @@ export default function ProductDetailModal({
           />
 
           <View className="flex-row items-center gap-2">
-            <Button
-              label="Ajustar Stock"
-              variant="secondary"
-              leftIcon={<MaterialIcons name="swap-vert" size={16} color="#c0c1ff" />}
-              onPress={() => {
-                onClose();
-                onAdjustStock?.(product);
-              }}
-            />
+            {isTracked && (
+              <Button
+                label="Ajustar Stock"
+                variant="secondary"
+                leftIcon={<MaterialIcons name="swap-vert" size={16} color="#c0c1ff" />}
+                onPress={() => {
+                  onClose();
+                  onAdjustStock?.(product);
+                }}
+              />
+            )}
 
             <Button
               label="Editar"

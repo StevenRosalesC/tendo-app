@@ -1,3 +1,5 @@
+import { ProductUnit } from "../../types/auth.types";
+
 export type ChannelType = "POS" | "Web";
 
 export type StockWarningType = "low_stock" | "out_of_stock" | null;
@@ -6,15 +8,19 @@ export interface Product {
   id: string;
   name: string;
   sku: string;
-  barcode: string;
+  barcode?: string;
   category: string;
   stock: number;
   stockBreakdown?: string;
   stockWarning?: StockWarningType;
   stockWarningText?: string;
   price: number;
+  costPrice?: number;
   cost: number;
   margin: number;
+  profit?: number;
+  unit?: ProductUnit;
+  trackStock?: boolean;
   channels: ChannelType[];
   available: boolean;
   imageUrl: string;

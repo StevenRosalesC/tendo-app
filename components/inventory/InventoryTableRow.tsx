@@ -1,5 +1,6 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { Image, Text, TouchableOpacity, View } from "react-native";
+import useAuthStore from "../../stores/useAuthStore";
 import { TableData, TableRow } from "../ui/Table";
 import { Product } from "./types";
 
@@ -15,6 +16,16 @@ export interface InventoryTableRowProps {
   isAlternate?: boolean;
 }
 
+const UNIT_SHORT: Record<string, string> = {
+  UNIT: "pz",
+  KG: "kg",
+  LB: "lb",
+  G: "g",
+  L: "L",
+  ML: "ml",
+  M: "m",
+};
+
 export default function InventoryTableRow({
   product,
   isSelected = false,
@@ -26,8 +37,11 @@ export default function InventoryTableRow({
   onMoreOptions,
   isAlternate = false,
 }: InventoryTableRowProps) {
+  const isManagerOrAdmin = useAuthStore((s) => s.isManager());
   const isOutOfStock = product.stockWarning === "out_of_stock";
   const isLowStock = product.stockWarning === "low_stock";
+  const isTracked = product.trackStock !== false;
+  const unitSuffix = product.unit ? UNIT_SHORT[product.unit] || "pz" : "pz";
 
   const customRowClass = isLowStock
     ? "bg-error-container/10 hover:bg-error-container/20"
@@ -102,12 +116,12 @@ export default function InventoryTableRow({
               <Text className="text-xs text-on-surface-variant">•</Text>
               <View className="flex-row items-center gap-1">
                 <MaterialIcons
-                  name="qr-code-scanner"
+                  name={product.barcode ? "qr-code-scanner" : "horizontal-rule"}
                   size={12}
                   color="#c7c4d7"
                 />
                 <Text className="text-[11px] font-mono text-on-surface-variant">
-                  {product.barcode}
+                  {product.barcode || "Sin código"}
                 </Text>
               </View>
             </View>
@@ -126,27 +140,35 @@ export default function InventoryTableRow({
 
       {/* Current Stock */}
       <TableData className="w-32" align="center">
-        <View
-          className={`px-3 py-1 rounded-full ${
-            isLowStock
-              ? "bg-error-container"
-              : isOutOfStock
-              ? "bg-surface-variant"
-              : "bg-secondary/15"
-          }`}
-        >
-          <Text
-            className={`text-xs font-bold font-mono ${
+        {!isTracked ? (
+          <View className="px-3 py-1 rounded-full bg-surface-container border border-surface-container-highest">
+            <Text className="text-xs font-bold text-primary">
+              Ilimitado
+            </Text>
+          </View>
+        ) : (
+          <View
+            className={`px-3 py-1 rounded-full ${
               isLowStock
-                ? "text-on-error-container"
+                ? "bg-error-container"
                 : isOutOfStock
-                ? "text-on-surface-variant"
-                : "text-secondary"
+                ? "bg-surface-variant"
+                : "bg-secondary/15"
             }`}
           >
-            {product.stock} uds
-          </Text>
-        </View>
+            <Text
+              className={`text-xs font-bold font-mono ${
+                isLowStock
+                  ? "text-on-error-container"
+                  : isOutOfStock
+                  ? "text-on-surface-variant"
+                  : "text-secondary"
+              }`}
+            >
+              {product.stock} {unitSuffix}
+            </Text>
+          </View>
+        )}
 
         <Text
           className={`text-[11px] mt-0.5 ${
@@ -155,7 +177,9 @@ export default function InventoryTableRow({
               : "text-on-surface-variant"
           }`}
         >
-          {product.stockWarningText || product.stockBreakdown || "POS Físico"}
+          {!isTracked
+            ? "A granel"
+            : product.stockWarningText || product.stockBreakdown || "POS Físico"}
         </Text>
       </TableData>
 
@@ -163,10 +187,13 @@ export default function InventoryTableRow({
       <TableData className="w-36" align="right">
         <Text className="text-sm font-bold text-on-surface font-mono">
           ${product.price.toFixed(2)}
+          {product.unit && product.unit !== "UNIT" ? ` /${unitSuffix}` : ""}
         </Text>
-        <Text className="text-[11px] text-on-surface-variant">
-          Costo: ${product.cost.toFixed(2)} ({product.margin}% mg)
-        </Text>
+        {isManagerOrAdmin && (
+          <Text className="text-[11px] text-on-surface-variant">
+            Costo: ${product.cost.toFixed(2)} ({product.margin}% mg)
+          </Text>
+        )}
       </TableData>
 
       {/* Active Channels */}

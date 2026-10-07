@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import React, { useEffect, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import tendoApi from "../../services/api";
+import { ProductUnit } from "../../types/auth.types";
 import AlertBanner from "../ui/AlertBanner";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
@@ -16,6 +17,16 @@ export interface StockAdjustModalProps {
   product?: Product | null;
   onSuccess?: () => void;
 }
+
+const UNIT_LABELS: Record<ProductUnit, string> = {
+  UNIT: "pz",
+  KG: "kg",
+  LB: "lb",
+  G: "g",
+  L: "L",
+  ML: "ml",
+  M: "m",
+};
 
 export default function StockAdjustModal({
   visible,
@@ -33,8 +44,8 @@ export default function StockAdjustModal({
 
   useEffect(() => {
     if (product) {
-      setCurrentStock(product.stock);
-      setTargetStock(String(product.stock));
+      setCurrentStock(product.stock ?? 0);
+      setTargetStock(String(product.stock ?? 0));
     }
     setErrorMessage(null);
   }, [product, visible]);
@@ -47,11 +58,22 @@ export default function StockAdjustModal({
     "Ajuste manual de caja",
   ];
 
-  const quickDeltas = [+1, +5, +10, +25, -1, -5, -10];
+  const unitSuffix = product?.unit ? UNIT_LABELS[product.unit] || "pz" : "pz";
+  const isDecimalUnit =
+    product?.unit === "KG" ||
+    product?.unit === "LB" ||
+    product?.unit === "G" ||
+    product?.unit === "L" ||
+    product?.unit === "ML" ||
+    product?.unit === "M";
+
+  const quickDeltas = isDecimalUnit
+    ? [+0.5, +1, +5, +10, -0.5, -1, -5]
+    : [+1, +5, +10, +25, -1, -5, -10];
 
   const applyDelta = (delta: number) => {
-    const current = parseInt(targetStock, 10) || 0;
-    const next = Math.max(0, current + delta);
+    const current = parseFloat(targetStock) || 0;
+    const next = Math.max(0, +(current + delta).toFixed(3));
     setTargetStock(String(next));
   };
 
@@ -61,9 +83,9 @@ export default function StockAdjustModal({
       const token = await getToken();
       if (!token) throw new Error("No active Clerk session available");
 
-      const newStockNumber = parseInt(targetStock, 10);
+      const newStockNumber = parseFloat(targetStock);
       if (isNaN(newStockNumber) || newStockNumber < 0) {
-        throw new Error("El stock debe ser un número entero mayor o igual a 0.");
+        throw new Error("El stock debe ser un número mayor o igual a 0.");
       }
 
       return tendoApi.updateProductStock(token, product.id, newStockNumber);
@@ -80,8 +102,8 @@ export default function StockAdjustModal({
     },
   });
 
-  const parsedTarget = parseInt(targetStock, 10) || 0;
-  const difference = parsedTarget - currentStock;
+  const parsedTarget = parseFloat(targetStock) || 0;
+  const difference = +(parsedTarget - currentStock).toFixed(3);
 
   return (
     <Modal
@@ -95,6 +117,16 @@ export default function StockAdjustModal({
       <View className="gap-5 pb-2">
         <AlertBanner message={errorMessage} />
 
+        {/* Warning if stock tracking is disabled for this product */}
+        {product?.trackStock === false && (
+          <View className="p-3 rounded-xl bg-amber-500/15 border border-amber-500/30 flex-row items-center gap-2">
+            <MaterialIcons name="info" size={16} color="#ffd279" />
+            <Text className="text-xs text-amber-200 flex-1">
+              Este producto está configurado sin control de existencias (venta libre/a granel).
+            </Text>
+          </View>
+        )}
+
         {/* Product Info Card */}
         <View className="bg-surface-container p-4 rounded-2xl border border-surface-container-high/60 flex-row items-center justify-between">
           <View className="flex-1 mr-3">
@@ -102,7 +134,8 @@ export default function StockAdjustModal({
               {product?.name}
             </Text>
             <Text className="text-xs text-on-surface-variant font-mono mt-0.5">
-              Código: {product?.barcode} • Precio: ${product?.price?.toFixed(2)}
+              {product?.barcode ? `Código: ${product.barcode} • ` : "Sin código • "}
+              Precio: ${product?.price?.toFixed(2)}
             </Text>
           </View>
 
@@ -110,8 +143,8 @@ export default function StockAdjustModal({
             <Text className="text-[10px] text-on-surface-variant font-semibold uppercase">
               Stock Actual
             </Text>
-            <Text className="text-lg font-bold text-primary">
-              {currentStock} uds.
+            <Text className="text-lg font-bold text-primary font-mono">
+              {currentStock} {unitSuffix}
             </Text>
           </View>
         </View>
@@ -133,11 +166,11 @@ export default function StockAdjustModal({
                 }`}
               >
                 <Text
-                  className={`text-xs font-bold ${
+                  className={`text-xs font-bold font-mono ${
                     delta > 0 ? "text-primary" : "text-error"
                   }`}
                 >
-                  {delta > 0 ? `+${delta}` : delta}
+                  {delta > 0 ? `+${delta}` : delta} {unitSuffix}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -148,11 +181,11 @@ export default function StockAdjustModal({
         <View className="flex-row items-center gap-4">
           <View className="flex-1">
             <Input
-              label="Nuevo Stock Total"
+              label={`Nuevo Stock Total (${unitSuffix})`}
               iconName="warehouse"
               value={targetStock}
               onChangeText={setTargetStock}
-              keyboardType="number-pad"
+              keyboardType="decimal-pad"
             />
           </View>
 
@@ -161,7 +194,7 @@ export default function StockAdjustModal({
               Variación
             </Text>
             <Text
-              className={`text-sm font-bold ${
+              className={`text-sm font-bold font-mono ${
                 difference > 0
                   ? "text-primary"
                   : difference < 0
@@ -169,7 +202,7 @@ export default function StockAdjustModal({
                   : "text-on-surface-variant"
               }`}
             >
-              {difference > 0 ? `+${difference}` : difference} uds.
+              {difference > 0 ? `+${difference}` : difference} {unitSuffix}
             </Text>
           </View>
         </View>

@@ -1,5 +1,6 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { Image, Text, TouchableOpacity, View } from "react-native";
+import useAuthStore from "../../stores/useAuthStore";
 import { Product } from "./types";
 
 export interface InventoryGridItemProps {
@@ -13,6 +14,16 @@ export interface InventoryGridItemProps {
   onMoreOptions?: (id: string) => void;
 }
 
+const UNIT_SHORT: Record<string, string> = {
+  UNIT: "pz",
+  KG: "kg",
+  LB: "lb",
+  G: "g",
+  L: "L",
+  ML: "ml",
+  M: "m",
+};
+
 export default function InventoryGridItem({
   product,
   isSelected = false,
@@ -23,8 +34,11 @@ export default function InventoryGridItem({
   onEditProduct,
   onMoreOptions,
 }: InventoryGridItemProps) {
+  const isManagerOrAdmin = useAuthStore((s) => s.isManager());
   const isOutOfStock = product.stockWarning === "out_of_stock";
   const isLowStock = product.stockWarning === "low_stock";
+  const isTracked = product.trackStock !== false;
+  const unitSuffix = product.unit ? UNIT_SHORT[product.unit] || "pz" : "pz";
 
   return (
     <View
@@ -106,33 +120,41 @@ export default function InventoryGridItem({
           </Text>
           <Text className="text-xs text-on-surface-variant">•</Text>
           <Text className="text-[11px] font-mono text-on-surface-variant">
-            {product.barcode}
+            {product.barcode || "Sin código"}
           </Text>
         </View>
 
         {/* Stock Status */}
         <View className="flex-row items-center justify-between mt-1">
-          <View
-            className={`px-2.5 py-0.5 rounded-full ${
-              isLowStock
-                ? "bg-error-container"
-                : isOutOfStock
-                ? "bg-surface-variant"
-                : "bg-secondary/15"
-            }`}
-          >
-            <Text
-              className={`text-xs font-bold font-mono ${
+          {!isTracked ? (
+            <View className="px-2.5 py-0.5 rounded-full bg-surface-container border border-surface-container-highest">
+              <Text className="text-xs font-bold text-primary">
+                Ilimitado
+              </Text>
+            </View>
+          ) : (
+            <View
+              className={`px-2.5 py-0.5 rounded-full ${
                 isLowStock
-                  ? "text-on-error-container"
+                  ? "bg-error-container"
                   : isOutOfStock
-                  ? "text-on-surface-variant"
-                  : "text-secondary"
+                  ? "bg-surface-variant"
+                  : "bg-secondary/15"
               }`}
             >
-              {product.stock} uds
-            </Text>
-          </View>
+              <Text
+                className={`text-xs font-bold font-mono ${
+                  isLowStock
+                    ? "text-on-error-container"
+                    : isOutOfStock
+                    ? "text-on-surface-variant"
+                    : "text-secondary"
+                }`}
+              >
+                {product.stock} {unitSuffix}
+              </Text>
+            </View>
+          )}
 
           <Text
             className={`text-xs ${
@@ -141,7 +163,9 @@ export default function InventoryGridItem({
                 : "text-on-surface-variant"
             }`}
           >
-            {product.stockWarningText || product.stockBreakdown || "POS Físico"}
+            {!isTracked
+              ? "A granel"
+              : product.stockWarningText || product.stockBreakdown || "POS Físico"}
           </Text>
         </View>
 
@@ -149,10 +173,13 @@ export default function InventoryGridItem({
         <View className="flex-row items-baseline justify-between mt-2 pt-2 border-t border-surface-container-high/40">
           <Text className="text-base font-bold text-on-surface font-mono">
             ${product.price.toFixed(2)}
+            {product.unit && product.unit !== "UNIT" ? ` /${unitSuffix}` : ""}
           </Text>
-          <Text className="text-[11px] text-on-surface-variant">
-            Costo: ${product.cost.toFixed(2)} ({product.margin}% mg)
-          </Text>
+          {isManagerOrAdmin && (
+            <Text className="text-[11px] text-on-surface-variant">
+              Costo: ${product.cost.toFixed(2)} ({product.margin}% mg)
+            </Text>
+          )}
         </View>
       </View>
 

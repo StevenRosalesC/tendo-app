@@ -141,10 +141,37 @@ export default function InventoryScreen() {
   const products: Product[] = useMemo(() => {
     if (!rawProducts || rawProducts.length === 0) return [];
     return rawProducts.map((p: any) => {
+      const isTracked = p.trackStock !== false;
       const isAvailable =
         availabilityOverrides[p.id] !== undefined
           ? availabilityOverrides[p.id]
-          : (p.stock ?? 0) > 0;
+          : !isTracked || (p.stock ?? 0) > 0;
+
+      const price = Number(p.price) || 0;
+      const costPrice = p.costPrice !== undefined ? Number(p.costPrice) : 0;
+      const profit = price - costPrice;
+      const margin =
+        price > 0 && costPrice > 0
+          ? Math.round(((price - costPrice) / price) * 100)
+          : costPrice === 0 && price > 0
+          ? 100
+          : 0;
+
+      const stockWarning = !isTracked
+        ? null
+        : (p.stock ?? 0) <= 0
+        ? "out_of_stock"
+        : (p.stock ?? 0) <= 5
+        ? "low_stock"
+        : null;
+
+      const stockWarningText = !isTracked
+        ? "Ilimitado"
+        : (p.stock ?? 0) <= 0
+        ? "Agotado"
+        : (p.stock ?? 0) <= 5
+        ? "Bajo Stock"
+        : undefined;
 
       return {
         id: p.id,
@@ -153,21 +180,15 @@ export default function InventoryScreen() {
         barcode: p.barcode,
         category: "General",
         stock: p.stock ?? 0,
-        stockWarning:
-          (p.stock ?? 0) <= 0
-            ? "out_of_stock"
-            : (p.stock ?? 0) <= 5
-            ? "low_stock"
-            : null,
-        stockWarningText:
-          (p.stock ?? 0) <= 0
-            ? "Agotado"
-            : (p.stock ?? 0) <= 5
-            ? "Bajo Stock"
-            : undefined,
-        price: Number(p.price) || 0,
-        cost: Math.round((Number(p.price) || 0) * 0.65),
-        margin: 35,
+        unit: p.unit || "UNIT",
+        trackStock: isTracked,
+        stockWarning,
+        stockWarningText,
+        price,
+        costPrice,
+        cost: costPrice,
+        margin,
+        profit,
         channels: ["POS", "Web"],
         available: isAvailable,
         imageUrl:
