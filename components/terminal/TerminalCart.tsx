@@ -1,10 +1,11 @@
 import { useAuth } from "@clerk/expo";
 import { useQueryClient } from "@tanstack/react-query";
 import { MaterialIcons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Platform,
   ScrollView,
   Text,
   TextInput,
@@ -23,9 +24,13 @@ import { CartItem } from "./types";
 
 export interface TerminalCartProps {
   onCheckoutSuccess?: (ticketId: string, total: number) => void;
+  isDesktop?: boolean;
 }
 
-export default function TerminalCart({ onCheckoutSuccess }: TerminalCartProps) {
+export default function TerminalCart({
+  onCheckoutSuccess,
+  isDesktop = false,
+}: TerminalCartProps) {
   const { getToken } = useAuth();
   const queryClient = useQueryClient();
   const {
@@ -52,7 +57,30 @@ export default function TerminalCart({ onCheckoutSuccess }: TerminalCartProps) {
   const [isSearchingBarcode, setIsSearchingBarcode] = useState(false);
   const [isProcessingCheckout, setIsProcessingCheckout] = useState(false);
 
+  const barcodeInputRef = useRef<TextInput | null>(null);
   const totals = getTotals();
+
+  // Keyboard shortcuts listener for Web (F3: Barcode focus, F12 or Ctrl+Enter: Checkout)
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "F3") {
+        e.preventDefault();
+        barcodeInputRef.current?.focus();
+      } else if (
+        (e.key === "F12" || (e.key === "Enter" && (e.ctrlKey || e.metaKey))) &&
+        items.length > 0 &&
+        !isProcessingCheckout
+      ) {
+        e.preventDefault();
+        handleCheckout();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [items, isProcessingCheckout, totals, customer, ticketNumber]);
 
   const handleScanBarcode = async (barcode: string) => {
     const code = barcode.trim();
@@ -112,7 +140,7 @@ export default function TerminalCart({ onCheckoutSuccess }: TerminalCartProps) {
   };
 
   const handleCheckout = async () => {
-    if (items.length === 0) return;
+    if (items.length === 0 || isProcessingCheckout) return;
 
     setIsProcessingCheckout(true);
     try {
@@ -165,10 +193,10 @@ export default function TerminalCart({ onCheckoutSuccess }: TerminalCartProps) {
   };
 
   return (
-    <View className="flex-1 w-full flex-col gap-4">
-      {/* Outer Card */}
-      <View className="bg-surface-container-low border border-surface-container-high/60 rounded-3xl p-4 sm:p-5 flex-col flex-1 justify-between shadow-sm">
-        {/* Header */}
+    <View className="flex-1 w-full flex-col min-h-0">
+      {/* Outer Card Container */}
+      <View className="bg-surface-container-low border border-surface-container-high/60 rounded-3xl p-4 sm:p-5 flex-col flex-1 justify-between shadow-sm min-h-0 overflow-hidden">
+        {/* Ticket Header */}
         <CartHeader
           ticketNumber={ticketNumber}
           customer={customer}
@@ -176,7 +204,9 @@ export default function TerminalCart({ onCheckoutSuccess }: TerminalCartProps) {
           totalUnits={totals.totalUnits}
           onCustomerPress={handleCustomerPress}
           onOpenScanner={() => setIsScannerOpen(true)}
-          onOpenManualSelect={() => setIsSelectModalOpen(true)}
+          onOpenManualSelect={
+            isDesktop ? undefined : () => setIsSelectModalOpen(true)
+          }
         />
 
         {/* Quick Barcode Scanner / Manual Barcode Input Bar */}
@@ -184,24 +214,35 @@ export default function TerminalCart({ onCheckoutSuccess }: TerminalCartProps) {
           <View className="flex-1 flex-row items-center bg-surface-container border border-surface-container-high rounded-xl px-3 h-10 gap-2">
             <MaterialIcons name="qr-code-scanner" size={17} color="#908fa0" />
             <TextInput
+              ref={barcodeInputRef}
               value={barcodeInput}
               onChangeText={setBarcodeInput}
               onSubmitEditing={handleBarcodeSubmit}
-              placeholder="Código de barras (ej. 750100...) o escanear"
+              placeholder={
+                isDesktop
+                  ? "Código de barras (F3) o escanear..."
+                  : "Código de barras (ej. 750100...) o escanear"
+              }
               placeholderTextColor="#77767e"
               className="flex-1 text-xs text-on-surface h-full"
               autoCapitalize="none"
               autoCorrect={false}
               returnKeyType="done"
             />
-            {barcodeInput.length > 0 && (
+            {barcodeInput.length > 0 ? (
               <TouchableOpacity
                 onPress={() => setBarcodeInput("")}
                 className="w-4 h-4 rounded-full bg-surface-container-highest items-center justify-center"
               >
                 <MaterialIcons name="close" size={10} color="#c7c4d7" />
               </TouchableOpacity>
-            )}
+            ) : isDesktop ? (
+              <View className="px-1.5 py-0.5 rounded bg-surface-container-high border border-surface-container-highest/60 hidden sm:flex">
+                <Text className="text-[10px] font-mono font-bold text-on-surface-variant">
+                  F3
+                </Text>
+              </View>
+            ) : null}
           </View>
 
           <TouchableOpacity
@@ -228,10 +269,10 @@ export default function TerminalCart({ onCheckoutSuccess }: TerminalCartProps) {
         </View>
 
         {/* Items List / Empty State */}
-        <View className="flex-1 my-3 min-h-[220px]">
+        <View className="flex-1 my-2.5 min-h-0">
           {items.length === 0 ? (
-            <View className="flex-1 items-center justify-center p-8 gap-3 my-auto">
-              <View className="w-16 h-16 rounded-2xl bg-surface-container-high border border-surface-container-highest/60 items-center justify-center">
+            <View className="flex-1 items-center justify-center p-6 gap-3 my-auto">
+              <View className="w-16 h-16 rounded-2xl bg-surface-container-high border border-surface-container-highest/60 items-center justify-center shadow-xs">
                 <MaterialIcons
                   name="shopping-bag"
                   size={32}
@@ -239,26 +280,30 @@ export default function TerminalCart({ onCheckoutSuccess }: TerminalCartProps) {
                 />
               </View>
               <Text className="text-base font-bold text-on-surface text-center">
-                El carrito está vacío
+                {isDesktop ? "El ticket está vacío" : "El carrito está vacío"}
               </Text>
               <Text className="text-xs text-on-surface-variant max-w-xs text-center leading-relaxed">
-                Escanea artículos con el lector de código de barras, cámara o selecciónalos manualmente.
+                {isDesktop
+                  ? "Haz clic en los productos del catálogo a tu izquierda o escanea un código de barras (F3) para agregar artículos."
+                  : "Escanea artículos con el lector de código de barras, cámara o selecciónalos manualmente."}
               </Text>
 
               <View className="flex-row items-center gap-2 mt-2 flex-wrap justify-center">
-                <TouchableOpacity
-                  onPress={() => setIsSelectModalOpen(true)}
-                  className="px-4 py-2 rounded-xl bg-surface-container-high border border-surface-container-highest/60 flex-row items-center gap-1.5 active:scale-95 hover:bg-surface-bright"
-                >
-                  <MaterialIcons
-                    name="search"
-                    size={16}
-                    color="#c0c1ff"
-                  />
-                  <Text className="text-xs font-bold text-primary">
-                    Seleccionar Producto
-                  </Text>
-                </TouchableOpacity>
+                {!isDesktop && (
+                  <TouchableOpacity
+                    onPress={() => setIsSelectModalOpen(true)}
+                    className="px-4 py-2 rounded-xl bg-surface-container-high border border-surface-container-highest/60 flex-row items-center gap-1.5 active:scale-95 hover:bg-surface-bright"
+                  >
+                    <MaterialIcons
+                      name="search"
+                      size={16}
+                      color="#c0c1ff"
+                    />
+                    <Text className="text-xs font-bold text-primary">
+                      Seleccionar Producto
+                    </Text>
+                  </TouchableOpacity>
+                )}
 
                 <TouchableOpacity
                   onPress={() => setIsScannerOpen(true)}
@@ -278,7 +323,7 @@ export default function TerminalCart({ onCheckoutSuccess }: TerminalCartProps) {
           ) : (
             <ScrollView
               className="flex-1"
-              showsVerticalScrollIndicator={false}
+              showsVerticalScrollIndicator={true}
               contentContainerClassName="gap-2.5 py-1"
             >
               {items.map((item) => (

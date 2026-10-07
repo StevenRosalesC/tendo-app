@@ -28,7 +28,7 @@ export default function CartSummary({
   const hasItems = totals.totalItems > 0;
 
   return (
-    <View className="bg-surface-container rounded-3xl p-5 border border-surface-container-high flex-col gap-4 shadow-sm">
+    <View className="bg-surface-container rounded-3xl p-4 sm:p-5 border border-surface-container-high flex-col gap-3.5 shadow-sm shrink-0">
       {/* Financial Details */}
       <View className="flex-col gap-2">
         {/* Subtotal */}
@@ -82,7 +82,7 @@ export default function CartSummary({
                     onDiscountChange(opt);
                     setShowDiscountSelector(false);
                   }}
-                  className={`px-2.5 py-1 rounded-lg border text-xs ${
+                  className={`px-2.5 py-1 rounded-lg border text-xs transition-colors ${
                     discountPercent === opt
                       ? "bg-primary border-primary"
                       : "bg-surface-container-high border-surface-container-highest/60 hover:bg-surface-bright"
@@ -114,10 +114,10 @@ export default function CartSummary({
         </View>
 
         {/* Divider */}
-        <View className="h-[1px] bg-surface-container-high my-1" />
+        <View className="h-[1px] bg-surface-container-high my-0.5" />
 
         {/* Grand Total */}
-        <View className="flex-row items-baseline justify-between pt-1">
+        <View className="flex-row items-baseline justify-between pt-0.5">
           <View>
             <Text className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">
               Total a Cobrar
@@ -141,9 +141,9 @@ export default function CartSummary({
         onPress={onCheckout}
         disabled={!hasItems || isLoading}
         activeOpacity={0.85}
-        className={`w-full py-3.5 px-5 rounded-2xl flex-row items-center justify-between shadow-lg ${
+        className={`w-full py-3.5 px-5 rounded-2xl flex-row items-center justify-between shadow-lg transition-all ${
           hasItems && !isLoading
-            ? "bg-primary active:scale-[0.99]"
+            ? "bg-primary active:scale-[0.99] hover:brightness-105"
             : "bg-surface-container-highest opacity-40"
         }`}
       >
@@ -184,8 +184,9 @@ export default function CartSummary({
           <TouchableOpacity
             onPress={onHold}
             disabled={!hasItems}
+            activeOpacity={0.7}
             className={`flex-1 py-2.5 px-3 rounded-xl border border-surface-container-highest/60 bg-surface-container-high flex-row items-center justify-center gap-1.5 ${
-              !hasItems ? "opacity-40" : "hover:bg-surface-bright"
+              !hasItems ? "opacity-40" : "hover:bg-surface-bright active:scale-95"
             }`}
           >
             <MaterialIcons name="pause" size={16} color="#c7c4d7" />
@@ -198,8 +199,9 @@ export default function CartSummary({
         <TouchableOpacity
           onPress={onClear}
           disabled={!hasItems}
+          activeOpacity={0.7}
           className={`flex-1 py-2.5 px-3 rounded-xl border border-surface-container-highest/60 bg-surface-container-high flex-row items-center justify-center gap-1.5 ${
-            !hasItems ? "opacity-40" : "hover:bg-error-container/20"
+            !hasItems ? "opacity-40" : "hover:bg-error-container/20 active:scale-95"
           }`}
         >
           <MaterialIcons name="delete-sweep" size={16} color="#ffb4ab" />
