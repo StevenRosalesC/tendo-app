@@ -5,8 +5,7 @@ import { ProductUnit } from "../types/auth.types";
 interface CartState {
   items: CartItem[];
   customer: CustomerInfo;
-  globalDiscountPercent: number;
-  taxRatePercent: number;
+  discount: number; // Fixed monetary discount in currency
   ticketNumber: string;
   isDrawerOpen: boolean;
 
@@ -33,8 +32,7 @@ interface CartState {
   decrementQuantity: (productId: string, step?: number) => void;
   clearCart: () => void;
   setCustomer: (customer: CustomerInfo) => void;
-  setGlobalDiscountPercent: (percent: number) => void;
-  setTaxRatePercent: (rate: number) => void;
+  setDiscount: (amount: number) => void;
   resetTicket: () => void;
   openDrawer: () => void;
   closeDrawer: () => void;
@@ -57,8 +55,7 @@ const generateTicketId = () => {
 export const useCartStore = create<CartState>((set, get) => ({
   items: [],
   customer: DEFAULT_CUSTOMER,
-  globalDiscountPercent: 0,
-  taxRatePercent: 16, // 16% IVA
+  discount: 0,
   ticketNumber: "T-1042",
   isDrawerOpen: false,
 
@@ -172,43 +169,38 @@ export const useCartStore = create<CartState>((set, get) => ({
     set({ customer });
   },
 
-  setGlobalDiscountPercent: (percent) => {
-    set({ globalDiscountPercent: Math.max(0, Math.min(100, percent)) });
-  },
-
-  setTaxRatePercent: (rate) => {
-    set({ taxRatePercent: Math.max(0, rate) });
+  setDiscount: (amount) => {
+    set({ discount: Math.max(0, amount) });
   },
 
   resetTicket: () => {
     set({
       items: [],
       customer: DEFAULT_CUSTOMER,
-      globalDiscountPercent: 0,
+      discount: 0,
       ticketNumber: generateTicketId(),
     });
   },
 
   getTotals: () => {
-    const { items, globalDiscountPercent, taxRatePercent } = get();
+    const { items, discount } = get();
 
     const subtotal = items.reduce(
       (sum, item) => sum + item.price * item.quantity,
       0,
     );
 
-    const discountAmount = (subtotal * globalDiscountPercent) / 100;
-    const taxableBase = Math.max(0, subtotal - discountAmount);
-    const taxAmount = (taxableBase * taxRatePercent) / 100;
-    const total = taxableBase + taxAmount;
+    const safeDiscount = Math.max(0, Math.min(subtotal, discount || 0));
+    const discountAmount = Number(safeDiscount.toFixed(2));
+    const total = Math.max(0, Number((subtotal - discountAmount).toFixed(2)));
 
     const totalUnits = items.reduce((sum, item) => sum + item.quantity, 0);
     const totalItems = items.length;
 
     return {
-      subtotal,
+      subtotal: Number(subtotal.toFixed(2)),
       discountAmount,
-      taxAmount,
+      taxAmount: 0, // Taxes disabled for now
       total,
       totalUnits,
       totalItems,
