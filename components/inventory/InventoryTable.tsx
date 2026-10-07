@@ -1,4 +1,5 @@
 import { MaterialIcons } from "@expo/vector-icons";
+import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import {
   Table,
@@ -16,9 +17,6 @@ export interface InventoryTableProps {
   selectedIds: string[];
   onToggleSelect: (id: string) => void;
   onToggleSelectAll: () => void;
-  onToggleAvailability: (id: string) => void;
-  onQuickAddStock: (id: string) => void;
-  onPrintBarcode: (id: string) => void;
   onEditProduct: (id: string) => void;
   onMoreOptions: (id: string) => void;
   currentPage?: number;
@@ -34,9 +32,6 @@ export default function InventoryTable({
   selectedIds,
   onToggleSelect,
   onToggleSelectAll,
-  onToggleAvailability,
-  onQuickAddStock,
-  onPrintBarcode,
   onEditProduct,
   onMoreOptions,
   currentPage = 1,
@@ -87,10 +82,10 @@ export default function InventoryTable({
             <TableHead className="flex-1 min-w-[280px]">Producto</TableHead>
             <TableHead className="w-28">Categoría</TableHead>
             <TableHead className="w-32" align="center">Stock Actual</TableHead>
-            <TableHead className="w-36" align="right">Precio Venta</TableHead>
-            <TableHead className="w-36" align="center">Canales Activos</TableHead>
-            <TableHead className="w-24" align="center">Disponibilidad</TableHead>
-            <TableHead className="w-40" align="right">Acciones Rápidas</TableHead>
+            <TableHead className="w-32" align="right">Precio Venta</TableHead>
+            <TableHead className="w-36" align="right">Costo / Margen</TableHead>
+            <TableHead className="w-32" align="center">Estado</TableHead>
+            <TableHead className="w-28" align="right">Acciones</TableHead>
           </TableRow>
         </TableHeader>
 
@@ -102,9 +97,6 @@ export default function InventoryTable({
               isSelected={selectedIds.includes(product.id)}
               isAlternate={index % 2 === 1}
               onToggleSelect={onToggleSelect}
-              onToggleAvailability={onToggleAvailability}
-              onQuickAddStock={onQuickAddStock}
-              onPrintBarcode={onPrintBarcode}
               onEditProduct={onEditProduct}
               onMoreOptions={onMoreOptions}
             />

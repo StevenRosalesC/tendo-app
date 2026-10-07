@@ -1,3 +1,4 @@
+import React from "react";
 import { View } from "react-native";
 import InventoryGridItem from "./InventoryGridItem";
 import InventoryPagination from "./InventoryPagination";
@@ -7,9 +8,6 @@ export interface InventoryGridProps {
   products: Product[];
   selectedIds: string[];
   onToggleSelect: (id: string) => void;
-  onToggleAvailability: (id: string) => void;
-  onQuickAddStock: (id: string) => void;
-  onPrintBarcode: (id: string) => void;
   onEditProduct: (id: string) => void;
   onMoreOptions: (id: string) => void;
   currentPage?: number;
@@ -24,9 +22,6 @@ export default function InventoryGrid({
   products,
   selectedIds,
   onToggleSelect,
-  onToggleAvailability,
-  onQuickAddStock,
-  onPrintBarcode,
   onEditProduct,
   onMoreOptions,
   currentPage = 1,
@@ -45,9 +40,6 @@ export default function InventoryGrid({
               product={product}
               isSelected={selectedIds.includes(product.id)}
               onToggleSelect={onToggleSelect}
-              onToggleAvailability={onToggleAvailability}
-              onQuickAddStock={onQuickAddStock}
-              onPrintBarcode={onPrintBarcode}
               onEditProduct={onEditProduct}
               onMoreOptions={onMoreOptions}
             />

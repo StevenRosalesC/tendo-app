@@ -1,4 +1,5 @@
 import { MaterialIcons } from "@expo/vector-icons";
+import React from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 import useAuthStore from "../../stores/useAuthStore";
 import { Product } from "./types";
@@ -7,9 +8,6 @@ export interface InventoryGridItemProps {
   product: Product;
   isSelected?: boolean;
   onToggleSelect?: (id: string) => void;
-  onToggleAvailability?: (id: string) => void;
-  onQuickAddStock?: (id: string) => void;
-  onPrintBarcode?: (id: string) => void;
   onEditProduct?: (id: string) => void;
   onMoreOptions?: (id: string) => void;
 }
@@ -28,9 +26,6 @@ export default function InventoryGridItem({
   product,
   isSelected = false,
   onToggleSelect,
-  onToggleAvailability,
-  onQuickAddStock,
-  onPrintBarcode,
   onEditProduct,
   onMoreOptions,
 }: InventoryGridItemProps) {
@@ -51,12 +46,16 @@ export default function InventoryGridItem({
       }`}
     >
       {/* Top Image & Overlays */}
-      <View className="w-full h-36 rounded-lg overflow-hidden bg-surface-container-high relative">
-        <Image
-          source={{ uri: product.imageUrl }}
-          className="w-full h-full"
-          resizeMode="cover"
-        />
+      <View className="w-full h-36 rounded-lg overflow-hidden bg-surface-container-high relative items-center justify-center">
+        {product.imageUrl ? (
+          <Image
+            source={{ uri: product.imageUrl }}
+            className="w-full h-full"
+            resizeMode="cover"
+          />
+        ) : (
+          <MaterialIcons name="inventory-2" size={32} color="#938f99" />
+        )}
 
         {/* Selection Checkbox */}
         <TouchableOpacity
@@ -70,7 +69,7 @@ export default function InventoryGridItem({
           {isSelected && <MaterialIcons name="check" size={14} color="#1000a9" />}
         </TouchableOpacity>
 
-        {/* Category Badge */}
+        {/* Status / Category Badge */}
         <View className="absolute top-2 right-2 px-2 py-0.5 rounded bg-surface-container-lowest/80 backdrop-blur-md">
           <Text className="text-[10px] font-semibold text-on-surface">
             {product.category}
@@ -97,20 +96,20 @@ export default function InventoryGridItem({
           >
             {product.name}
           </Text>
-          <TouchableOpacity
-            onPress={() => onToggleAvailability?.(product.id)}
-            className={`w-8 h-4 rounded-full relative p-0.5 flex-row items-center ml-2 ${
-              product.available ? "bg-primary" : "bg-surface-container-high"
-            }`}
-          >
-            <View
-              className={`w-3 h-3 rounded-full shadow-sm ${
-                product.available
-                  ? "bg-on-primary ml-auto"
-                  : "bg-on-surface-variant mr-auto"
-              }`}
-            />
-          </TouchableOpacity>
+          {/* Status Chip */}
+          {!isTracked ? (
+            <View className="px-2 py-0.2 rounded bg-secondary/15 ml-2">
+              <Text className="text-[10px] font-bold text-secondary uppercase">
+                Venta Libre
+              </Text>
+            </View>
+          ) : isLowStock ? (
+            <View className="px-2 py-0.2 rounded bg-error-container ml-2">
+              <Text className="text-[10px] font-bold text-on-error-container uppercase">
+                Bajo Stock
+              </Text>
+            </View>
+          ) : null}
         </View>
 
         {/* SKU and Barcode */}
@@ -164,8 +163,8 @@ export default function InventoryGridItem({
             }`}
           >
             {!isTracked
-              ? "A granel"
-              : product.stockWarningText || product.stockBreakdown || "POS Físico"}
+              ? "Sin control"
+              : product.stockWarningText || "En mostrador"}
           </Text>
         </View>
 
@@ -184,45 +183,21 @@ export default function InventoryGridItem({
       </View>
 
       {/* Action Row */}
-      <View className="flex-row items-center justify-between mt-3 pt-2 border-t border-surface-container-high/40">
-        <View className="flex-row items-center gap-1">
-          {product.channels.map((ch) => (
-            <View
-              key={ch}
-              className="px-1.5 py-0.5 rounded bg-surface-container-high flex-row items-center gap-0.5"
-            >
-              <MaterialIcons
-                name={ch === "POS" ? "point-of-sale" : "language"}
-                size={11}
-                color="#c7c4d7"
-              />
-              <Text className="text-[10px] text-on-surface-variant font-medium">
-                {ch}
-              </Text>
-            </View>
-          ))}
-        </View>
+      <View className="flex-row items-center justify-end gap-1.5 mt-3 pt-2 border-t border-surface-container-high/40">
+        <TouchableOpacity
+          onPress={() => onEditProduct?.(product.id)}
+          className="h-8 px-3 rounded-lg bg-surface-container-high hover:bg-surface-container-highest flex-row items-center gap-1.5"
+        >
+          <MaterialIcons name="edit" size={15} color="#c7c4d7" />
+          <Text className="text-xs font-medium text-on-surface">Editar</Text>
+        </TouchableOpacity>
 
-        <View className="flex-row items-center gap-1">
-          <TouchableOpacity
-            onPress={() => onQuickAddStock?.(product.id)}
-            className="w-7 h-7 rounded hover:bg-surface-container-high items-center justify-center"
-          >
-            <MaterialIcons name="add-circle" size={16} color="#c7c4d7" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => onEditProduct?.(product.id)}
-            className="w-7 h-7 rounded hover:bg-surface-container-high items-center justify-center"
-          >
-            <MaterialIcons name="edit" size={16} color="#c7c4d7" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => onMoreOptions?.(product.id)}
-            className="w-7 h-7 rounded hover:bg-surface-container-high items-center justify-center"
-          >
-            <MaterialIcons name="more-vert" size={16} color="#c7c4d7" />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          onPress={() => onMoreOptions?.(product.id)}
+          className="w-8 h-8 rounded-lg bg-surface-container-high hover:bg-surface-container-highest items-center justify-center"
+        >
+          <MaterialIcons name="more-vert" size={16} color="#c7c4d7" />
+        </TouchableOpacity>
       </View>
     </View>
   );
