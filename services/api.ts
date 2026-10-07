@@ -1,5 +1,12 @@
 import { Platform } from "react-native";
-import { AuthenticatedUserProfile, ProductUnit, StoreData } from "../types/auth.types";
+import {
+  AppRole,
+  AuthenticatedUserProfile,
+  GetUsersParams,
+  ProductUnit,
+  StoreData,
+  UserListItem,
+} from "../types/auth.types";
 
 export const getApiBaseUrl = (): string => {
   if (process.env.EXPO_PUBLIC_API_URL) {
@@ -346,6 +353,35 @@ export const tendoApi = {
         method: "DELETE",
       },
     );
+  },
+
+  /**
+   * List employees of the current store with optional pagination, role and search filters
+   */
+  getUsers: (token: string, params?: GetUsersParams) => {
+    const query = new URLSearchParams();
+    if (params?.page) query.append("page", String(params.page));
+    if (params?.limit) query.append("limit", String(params.limit));
+    if (params?.role) query.append("role", params.role);
+    if (params?.search) query.append("search", params.search);
+    const qs = query.toString();
+    return apiRequest<PaginatedResponse<UserListItem>>(
+      `/users${qs ? `?${qs}` : ""}`,
+      token,
+      {
+        method: "GET",
+      },
+    );
+  },
+
+  /**
+   * Update an employee's business role in the current store (Admin only)
+   */
+  updateUserRole: (token: string, userId: string, role: AppRole) => {
+    return apiRequest<UserListItem>(`/users/${userId}/role`, token, {
+      method: "PATCH",
+      body: JSON.stringify({ role }),
+    });
   },
 };
 

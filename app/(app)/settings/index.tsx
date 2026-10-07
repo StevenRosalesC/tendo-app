@@ -17,9 +17,10 @@ import Badge from "../../../components/ui/Badge";
 import Button from "../../../components/ui/Button";
 import Card from "../../../components/ui/Card";
 import Input from "../../../components/ui/Input";
+import TeamManagementTab from "../../../components/settings/TeamManagementTab";
 import { useCurrentUser } from "../../../hooks/useCurrentUser";
 import { usePosSocket } from "../../../hooks/usePosSocket";
-import tendoApi, { getApiBaseUrl } from "../../../services/api";
+import tendoApi from "../../../services/api";
 import useAuthStore from "../../../stores/useAuthStore";
 import { ProductUnit } from "../../../types/auth.types";
 
@@ -82,6 +83,9 @@ export default function SettingsScreen() {
   const isManagerOrAdmin = useAuthStore((s) => s.isManager());
   const setUser = useAuthStore((s) => s.setUser);
   const { isConnected: isWsConnected } = usePosSocket();
+
+  // Tab state for Admin and Manager
+  const [activeTab, setActiveTab] = useState<"store" | "team">("store");
 
   // Local state for store configuration
   const [storeName, setStoreName] = useState<string>("");
@@ -216,7 +220,62 @@ export default function SettingsScreen() {
         />
       </View>
 
-      {/* Status banners */}
+      {/* Segmented Tab Bar for Store & Team Management (Admin/Manager) */}
+      {isManagerOrAdmin && (
+        <View className="flex-row p-1 bg-surface-container-low border border-surface-container-high rounded-2xl">
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => setActiveTab("store")}
+            className={`flex-1 py-2.5 px-4 rounded-xl flex-row items-center justify-center gap-2 transition-all ${
+              activeTab === "store"
+                ? "bg-surface-container-highest shadow-md"
+                : "hover:bg-surface-container/60"
+            }`}
+          >
+            <MaterialIcons
+              name="storefront"
+              size={18}
+              color={activeTab === "store" ? "#c0c1ff" : "#c7c4d7"}
+            />
+            <Text
+              className={`text-xs sm:text-sm font-bold ${
+                activeTab === "store" ? "text-on-surface" : "text-on-surface-variant"
+              }`}
+            >
+              Tienda y Terminal
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => setActiveTab("team")}
+            className={`flex-1 py-2.5 px-4 rounded-xl flex-row items-center justify-center gap-2 transition-all ${
+              activeTab === "team"
+                ? "bg-surface-container-highest shadow-md"
+                : "hover:bg-surface-container/60"
+            }`}
+          >
+            <MaterialIcons
+              name="groups"
+              size={18}
+              color={activeTab === "team" ? "#c0c1ff" : "#c7c4d7"}
+            />
+            <Text
+              className={`text-xs sm:text-sm font-bold ${
+                activeTab === "team" ? "text-on-surface" : "text-on-surface-variant"
+              }`}
+            >
+              Equipo y Cajeros
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {activeTab === "team" && isManagerOrAdmin ? (
+        <TeamManagementTab />
+      ) : (
+        <>
+          {/* Status banners */}
       {successMessage && (
         <AlertBanner type="success" message={successMessage} />
       )}
@@ -372,29 +431,6 @@ export default function SettingsScreen() {
             </Text>
           </View>
         </View>
-
-        {user?.store?.id && (
-          <View className="p-3 rounded-xl bg-surface-container-highest/40 border border-surface-container-high/30 flex-row items-center justify-between flex-wrap gap-2">
-            <View className="gap-0.5">
-              <Text className="text-[11px] text-on-surface-variant font-medium">
-                ID de Tienda (UUID)
-              </Text>
-              <Text className="text-xs font-mono text-on-surface">
-                {user.store.id}
-              </Text>
-            </View>
-            {user.store.clerkOrgId && (
-              <View className="gap-0.5">
-                <Text className="text-[11px] text-on-surface-variant font-medium">
-                  Organización Clerk
-                </Text>
-                <Text className="text-xs font-mono text-on-surface-variant">
-                  {user.store.clerkOrgId}
-                </Text>
-              </View>
-            )}
-          </View>
-        )}
       </Card>
 
       {/* Block 3: Terminal Hardware & Connection Status */}
@@ -415,12 +451,12 @@ export default function SettingsScreen() {
             />
             <View>
               <Text className="text-sm font-semibold text-on-surface">
-                Socket POS en Tiempo Real
+                Sincronización en Tiempo Real
               </Text>
               <Text className="text-xs text-on-surface-variant">
                 {isWsConnected
-                  ? "Sincronización activa con servidor central"
-                  : "Desconectado - Intentando reconectar..."}
+                  ? "Terminal conectada y sincronizada"
+                  : "Sin conexión - Intentando reconectar..."}
               </Text>
             </View>
           </View>
@@ -430,30 +466,20 @@ export default function SettingsScreen() {
             size="sm"
           />
         </View>
-
-        <View className="flex-row items-center justify-between p-3.5 rounded-xl bg-surface-container/60 border border-surface-container-high/40">
-          <View className="gap-0.5">
-            <Text className="text-sm font-semibold text-on-surface">
-              Servidor API Conectado
-            </Text>
-            <Text className="text-xs font-mono text-on-surface-variant">
-              {getApiBaseUrl()}
-            </Text>
-          </View>
-          <Badge label="REST v1" variant="neutral" size="sm" />
-        </View>
       </Card>
 
-      {/* Block 4: Sign Out / Security */}
-      <View className="pt-2">
-        <Button
-          label="Cerrar sesión de operador"
-          variant="danger"
-          fullWidth
-          leftIcon={<MaterialIcons name="logout" size={18} color="#FFDAD6" />}
-          onPress={confirmSignOut}
-        />
-      </View>
+          {/* Block 4: Sign Out / Security */}
+          <View className="pt-2">
+            <Button
+              label="Cerrar sesión de operador"
+              variant="danger"
+              fullWidth
+              leftIcon={<MaterialIcons name="logout" size={18} color="#FFDAD6" />}
+              onPress={confirmSignOut}
+            />
+          </View>
+        </>
+      )}
     </ScrollView>
   );
 }

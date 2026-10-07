@@ -28,6 +28,24 @@ export interface AuthenticatedUserProfile {
   permissions: UserPermissions;
 }
 
+export interface UserListItem {
+  id: string;
+  clerkId: string;
+  storeId?: string;
+  email: string;
+  name: string;
+  role: AppRole;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface GetUsersParams {
+  page?: number;
+  limit?: number;
+  role?: AppRole;
+  search?: string;
+}
+
 export interface StockUpdatedEvent {
   productId: string;
   barcode: string;
