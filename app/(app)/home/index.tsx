@@ -16,12 +16,16 @@ import Badge from "../../../components/ui/Badge";
 import Card from "../../../components/ui/Card";
 import { useCurrentUser } from "../../../hooks/useCurrentUser";
 import { usePosSocket } from "../../../hooks/usePosSocket";
+import usePermissions from "../../../hooks/usePermissions";
+import { AppAction, AppResource } from "../../../types/permissions.types";
 import tendoApi, { SaleRecord } from "../../../services/api";
 
 export default function HomeScreen() {
   const router = useRouter();
   const { getToken } = useAuth();
   const { user } = useCurrentUser();
+  const { can } = usePermissions();
+  const canReadReports = can(AppResource.REPORTS, AppAction.READ);
   const { isConnected: isWsConnected } = usePosSocket();
 
   const firstName = user?.name?.split(" ")[0] || "Operador";
@@ -190,7 +194,7 @@ export default function HomeScreen() {
             onPress={handleRefresh}
             activeOpacity={0.7}
             disabled={isLoadingSales || isRefetchingSales}
-            className="h-9 px-3 rounded-xl bg-surface-container-high hover:bg-surface-container-highest border border-surface-container-highest/60 flex-row items-center gap-1.5"
+            className="h-9 px-3 rounded-xl bg-surface-container-high border border-surface-container-highest/60 flex-row items-center gap-1.5"
           >
             {isRefetchingSales ? (
               <ActivityIndicator size="small" color="#c0c1ff" />
@@ -373,34 +377,64 @@ export default function HomeScreen() {
             </Text>
           </Card>
 
-          {/* Card: Reportes de Rentabilidad */}
-          <Card variant="low" className="p-5 justify-between gap-3">
-            <View className="flex-row items-center justify-between">
-              <View className="flex-row items-center gap-2.5">
-                <View className="w-9 h-9 rounded-xl bg-emerald-500/10 items-center justify-center">
-                  <MaterialIcons name="insights" size={18} color="#34d399" />
+          {/* Card: Profitability Reports or Terminal Settings */}
+          {canReadReports ? (
+            <Card variant="low" className="p-5 justify-between gap-3">
+              <View className="flex-row items-center justify-between">
+                <View className="flex-row items-center gap-2.5">
+                  <View className="w-9 h-9 rounded-xl bg-emerald-500/10 items-center justify-center">
+                    <MaterialIcons name="insights" size={18} color="#34d399" />
+                  </View>
+                  <View>
+                    <Text className="text-sm font-bold text-on-surface">
+                      Reportes y Rentabilidad
+                    </Text>
+                    <Text className="text-xs text-on-surface-variant">
+                      Cálculo de márgenes y COGS
+                    </Text>
+                  </View>
                 </View>
-                <View>
-                  <Text className="text-sm font-bold text-on-surface">
-                    Reportes y Rentabilidad
-                  </Text>
-                  <Text className="text-xs text-on-surface-variant">
-                    Cálculo de márgenes y COGS
-                  </Text>
-                </View>
-              </View>
 
-              <TouchableOpacity
-                onPress={() => router.push("/reports")}
-                className="p-2 rounded-lg bg-surface-container-high"
-              >
-                <MaterialIcons name="arrow-forward" size={16} color="#34d399" />
-              </TouchableOpacity>
-            </View>
-            <Text className="text-xs text-on-surface-variant leading-relaxed">
-              Consulta utilidades brutas, márgenes reales y desglose ticket por ticket con costos congelados.
-            </Text>
-          </Card>
+                <TouchableOpacity
+                  onPress={() => router.push("/reports")}
+                  className="p-2 rounded-lg bg-surface-container-high"
+                >
+                  <MaterialIcons name="arrow-forward" size={16} color="#34d399" />
+                </TouchableOpacity>
+              </View>
+              <Text className="text-xs text-on-surface-variant leading-relaxed">
+                Consulta utilidades brutas, márgenes reales y desglose ticket por ticket con costos congelados.
+              </Text>
+            </Card>
+          ) : (
+            <Card variant="low" className="p-5 justify-between gap-3">
+              <View className="flex-row items-center justify-between">
+                <View className="flex-row items-center gap-2.5">
+                  <View className="w-9 h-9 rounded-xl bg-primary/10 items-center justify-center">
+                    <MaterialIcons name="settings" size={18} color="#c0c1ff" />
+                  </View>
+                  <View>
+                    <Text className="text-sm font-bold text-on-surface">
+                      Ajustes de Terminal
+                    </Text>
+                    <Text className="text-xs text-on-surface-variant">
+                      Estado y configuración
+                    </Text>
+                  </View>
+                </View>
+
+                <TouchableOpacity
+                  onPress={() => router.push("/settings")}
+                  className="p-2 rounded-lg bg-surface-container-high"
+                >
+                  <MaterialIcons name="arrow-forward" size={16} color="#c0c1ff" />
+                </TouchableOpacity>
+              </View>
+              <Text className="text-xs text-on-surface-variant leading-relaxed">
+                Verifica el estado del hardware, conexión con Tendo Cloud y datos de tu sesión activa.
+              </Text>
+            </Card>
+          )}
         </View>
       </View>
 

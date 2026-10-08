@@ -12,11 +12,14 @@ import {
   View,
 } from "react-native";
 
+import { useRouter } from "expo-router";
 import Badge from "../../../components/ui/Badge";
 import Card from "../../../components/ui/Card";
 import Modal from "../../../components/ui/Modal";
 import tendoApi, { SaleRecord, SaleItemRecord } from "../../../services/api";
 import useAuthStore from "../../../stores/useAuthStore";
+import usePermissions from "../../../hooks/usePermissions";
+import { AppAction, AppResource } from "../../../types/permissions.types";
 
 type PeriodFilter = "today" | "7days" | "30days" | "all";
 
@@ -33,7 +36,10 @@ const PERIODS: PeriodOption[] = [
 ];
 
 export default function ReportsScreen() {
+  const router = useRouter();
   const { getToken } = useAuth();
+  const { can, role } = usePermissions();
+  const canReadReports = can(AppResource.REPORTS, AppAction.READ);
   const isManagerOrAdmin = useAuthStore((s) => s.isManager());
 
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodFilter>("today");
@@ -75,6 +81,7 @@ export default function ReportsScreen() {
         startDate: dateRange.startDate,
       });
     },
+    enabled: canReadReports,
     staleTime: 1000 * 30, // 30 seconds
   });
 
@@ -172,6 +179,34 @@ export default function ReportsScreen() {
     return { saleCogs, saleProfit, saleMargin, totalItems };
   };
 
+  if (!canReadReports) {
+    return (
+      <View className="flex-1 bg-surface items-center justify-center p-6">
+        <View className="max-w-md w-full bg-surface-container-low border border-surface-container-high rounded-3xl p-8 items-center gap-4">
+          <View className="w-16 h-16 rounded-2xl bg-amber-500/10 items-center justify-center">
+            <MaterialIcons name="lock" size={32} color="#FBBF24" />
+          </View>
+          <Text className="text-xl font-bold text-on-surface text-center">
+            Acceso Restringido
+          </Text>
+          <Text className="text-xs text-on-surface-variant text-center leading-relaxed">
+            Tu rol actual ({role || "Cajero"}) no tiene permisos para consultar reportes y métricas de la tienda. Consulta con un administrador si requieres acceso.
+          </Text>
+          <TouchableOpacity
+            onPress={() => router.replace("/home")}
+            activeOpacity={0.7}
+            className="mt-2 bg-primary px-6 py-3 rounded-xl flex-row items-center gap-2"
+          >
+            <MaterialIcons name="arrow-back" size={18} color="#0d0096" />
+            <Text className="text-xs font-bold text-on-primary">
+              Volver al Inicio Hub
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <ScrollView
       className="flex-1 bg-surface"
@@ -230,7 +265,7 @@ export default function ReportsScreen() {
               key={p.key}
               activeOpacity={0.8}
               onPress={() => setSelectedPeriod(p.key)}
-              className={`px-3.5 py-2 rounded-xl border transition-all ${
+              className={`px-3.5 py-2 rounded-xl border ${
                 isSelected
                   ? "bg-primary-container border-primary"
                   : "bg-surface-container-high/60 border-surface-container-high"
@@ -513,7 +548,7 @@ export default function ReportsScreen() {
                   key={sale.id}
                   activeOpacity={0.7}
                   onPress={() => setSelectedSale(sale)}
-                  className="p-3.5 sm:p-4 rounded-xl bg-surface-container/60 hover:bg-surface-container border border-surface-container-high/40 flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  className="p-3.5 sm:p-4 rounded-xl bg-surface-container/60 border border-surface-container-high/40 flex-col sm:flex-row sm:items-center justify-between gap-3"
                 >
                   {/* Left Column: Ticket ID, Date, Cashier */}
                   <View className="gap-1 flex-1">

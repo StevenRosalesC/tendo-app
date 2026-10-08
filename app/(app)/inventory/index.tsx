@@ -27,9 +27,13 @@ import { Product } from "../../../components/inventory/types";
 import { useAuth } from "@clerk/expo";
 import { useQuery } from "@tanstack/react-query";
 import tendoApi, { PaginationMeta } from "@/services/api";
+import usePermissions from "../../../hooks/usePermissions";
+import { AppAction, AppResource } from "../../../types/permissions.types";
 
 export default function InventoryScreen() {
   const { getToken } = useAuth();
+  const { can } = usePermissions();
+  const canCreateProducts = can(AppResource.PRODUCTS, AppAction.CREATE);
   const { width: windowWidth } = useWindowDimensions();
   const isMobile = windowWidth > 0 && windowWidth < 768;
   const isInitialMount = useRef(true);
@@ -376,7 +380,7 @@ export default function InventoryScreen() {
       {/* 1. Header & Primary/Secondary Actions */}
       <InventoryHeader
         totalProducts={paginationMeta.total}
-        onNewProduct={handleNewProduct}
+        onNewProduct={canCreateProducts ? handleNewProduct : undefined}
         onExportCsv={handleExportCsv}
         isExporting={isExporting}
         onRefresh={handleRefreshAll}
@@ -463,14 +467,16 @@ export default function InventoryScreen() {
             <Text className="text-xs text-on-surface-variant max-w-sm text-center">
               Empieza registrando tu primer producto con código de barras, precio de venta y stock para tu mostrador.
             </Text>
-            <TouchableOpacity
-              onPress={handleNewProduct}
-              className="mt-2 bg-primary px-5 py-2.5 rounded-xl flex-row items-center gap-2"
-            >
-              <Text className="text-xs font-bold text-on-primary">
-                + Crear Primer Producto
-              </Text>
-            </TouchableOpacity>
+            {canCreateProducts && (
+              <TouchableOpacity
+                onPress={handleNewProduct}
+                className="mt-2 bg-primary px-5 py-2.5 rounded-xl flex-row items-center gap-2"
+              >
+                <Text className="text-xs font-bold text-on-primary">
+                  + Crear Primer Producto
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
         )
       ) : viewMode === "table" ? (

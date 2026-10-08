@@ -4,6 +4,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import React, { useState } from "react";
 import { Text, View } from "react-native";
 import tendoApi from "../../services/api";
+import usePermissions from "../../hooks/usePermissions";
+import { AppAction, AppResource } from "../../types/permissions.types";
 import AlertBanner from "../ui/AlertBanner";
 import Button from "../ui/Button";
 import Modal from "../ui/Modal";
@@ -24,11 +26,16 @@ export default function DeleteProductModal({
 }: DeleteProductModalProps) {
   const { getToken } = useAuth();
   const queryClient = useQueryClient();
+  const { can } = usePermissions();
+  const canDeleteProducts = can(AppResource.PRODUCTS, AppAction.DELETE);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const mutation = useMutation({
     mutationFn: async () => {
       if (!product) throw new Error("No hay producto seleccionado.");
+      if (!canDeleteProducts) {
+        throw new Error("No tienes permisos para eliminar productos del catálogo.");
+      }
       const token = await getToken();
       if (!token) throw new Error("No se encontró una sesión activa.");
 
@@ -92,6 +99,7 @@ export default function DeleteProductModal({
               <MaterialIcons name="delete" size={18} color="#ffffff" />
             }
             loading={mutation.isPending}
+            disabled={mutation.isPending || !canDeleteProducts}
             onPress={() => mutation.mutate()}
           />
         </View>

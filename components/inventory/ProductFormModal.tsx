@@ -7,6 +7,7 @@ import tendoApi from "../../services/api";
 import { ProductUnit } from "../../types/auth.types";
 import useCurrentUser from "../../hooks/useCurrentUser";
 import useAuthStore from "../../stores/useAuthStore";
+import usePermissions from "../../hooks/usePermissions";
 import AlertBanner from "../ui/AlertBanner";
 import BarcodeScanner from "../ui/BarcodeScanner";
 import Button from "../ui/Button";
@@ -40,7 +41,8 @@ export default function ProductFormModal({
   const { getToken } = useAuth();
   const queryClient = useQueryClient();
   const { user } = useCurrentUser();
-  const isManagerOrAdmin = useAuthStore((s) => s.isManager());
+  const { canCreateProducts, canUpdateProducts, canReadReports } = usePermissions();
+  const canViewCostPrice = canReadReports || canUpdateProducts;
 
   const defaultStoreUnit: ProductUnit = user?.store?.defaultUnit || "UNIT";
   const isEditMode = !!productToEdit;
@@ -165,8 +167,14 @@ export default function ProductFormModal({
       };
 
       if (isEditMode && productToEdit) {
+        if (!canUpdateProducts) {
+          throw new Error("No tienes permisos para modificar productos.");
+        }
         return tendoApi.updateProduct(token, productToEdit.id, payload);
       } else {
+        if (!canCreateProducts) {
+          throw new Error("No tienes permisos para dar de alta productos.");
+        }
         return tendoApi.createProduct(token, payload);
       }
     },
@@ -434,7 +442,7 @@ export default function ProductFormModal({
             />
           </View>
 
-          {isManagerOrAdmin && (
+          {canViewCostPrice && (
             <View className="flex-1">
               <Input
                 label="Precio de Compra ($)"
@@ -449,7 +457,7 @@ export default function ProductFormModal({
         </View>
 
         {/* Profit Margin Telemetry Banner */}
-        {parsedPrice > 0 && isManagerOrAdmin && (
+        {parsedPrice > 0 && canViewCostPrice && (
           <View className="p-3 rounded-2xl bg-surface-container border border-surface-container-high/60 flex-row items-center justify-between">
             <View className="flex-row items-center gap-2">
               <View

@@ -23,6 +23,7 @@ import { useCurrentUser } from "../../../hooks/useCurrentUser";
 import { usePosSocket } from "../../../hooks/usePosSocket";
 import tendoApi from "../../../services/api";
 import useAuthStore from "../../../stores/useAuthStore";
+import usePermissions from "../../../hooks/usePermissions";
 import { ProductUnit } from "../../../types/auth.types";
 
 interface UnitOption {
@@ -81,7 +82,7 @@ export default function SettingsScreen() {
   const { getToken, signOut } = useAuth();
   const queryClient = useQueryClient();
   const { user, refetch } = useCurrentUser();
-  const isManagerOrAdmin = useAuthStore((s) => s.isManager());
+  const { canReadUsers, canUpdateStore, role, isManager, isAdmin } = usePermissions();
   const setUser = useAuthStore((s) => s.setUser);
   const { isConnected: isWsConnected } = usePosSocket();
 
@@ -222,15 +223,15 @@ export default function SettingsScreen() {
       </View>
 
       {/* Segmented Tab Bar for Store & Team Management (Admin/Manager) */}
-      {isManagerOrAdmin && (
+      {canReadUsers && (
         <View className="flex-row p-1 bg-surface-container-low border border-surface-container-high rounded-2xl">
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={() => setActiveTab("store")}
-            className={`flex-1 py-2.5 px-4 rounded-xl flex-row items-center justify-center gap-2 transition-all ${
+            className={`flex-1 py-2.5 px-4 rounded-xl flex-row items-center justify-center gap-2 ${
               activeTab === "store"
-                ? "bg-surface-container-highest shadow-md"
-                : "hover:bg-surface-container/60"
+                ? "bg-surface-container-highest"
+                : "bg-transparent"
             }`}
           >
             <MaterialIcons
@@ -250,10 +251,10 @@ export default function SettingsScreen() {
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={() => setActiveTab("team")}
-            className={`flex-1 py-2.5 px-4 rounded-xl flex-row items-center justify-center gap-2 transition-all ${
+            className={`flex-1 py-2.5 px-4 rounded-xl flex-row items-center justify-center gap-2 ${
               activeTab === "team"
-                ? "bg-surface-container-highest shadow-md"
-                : "hover:bg-surface-container/60"
+                ? "bg-surface-container-highest"
+                : "bg-transparent"
             }`}
           >
             <MaterialIcons
@@ -272,7 +273,7 @@ export default function SettingsScreen() {
         </View>
       )}
 
-      {activeTab === "team" && isManagerOrAdmin ? (
+      {activeTab === "team" && canReadUsers ? (
         <TeamManagementTab />
       ) : (
         <>
@@ -285,10 +286,10 @@ export default function SettingsScreen() {
       )}
 
       {/* Read-only notification if not manager/admin */}
-      {!isManagerOrAdmin && (
+      {!canUpdateStore && (
         <AlertBanner
           type="info"
-          message="Modo operador: Solo los usuarios con rol Administrador o Gerente pueden modificar el nombre y la unidad por defecto de la sucursal."
+          message="Modo lectura: Solo los usuarios con rol Administrador pueden modificar el nombre y la unidad por defecto de la sucursal."
         />
       )}
 
@@ -301,8 +302,10 @@ export default function SettingsScreen() {
               Configuración de la Sucursal
             </Text>
           </View>
-          {isManagerOrAdmin && (
+          {canUpdateStore ? (
             <Badge label="Edición Habilitada" variant="success" size="sm" />
+          ) : (
+            <Badge label="Solo Lectura" variant="neutral" size="sm" />
           )}
         </View>
 
@@ -312,8 +315,8 @@ export default function SettingsScreen() {
             label="Nombre Comercial de la Sucursal"
             placeholder="Ej. Tendo Central Condesa"
             value={storeName}
-            onChangeText={setStoreName}
-            editable={isManagerOrAdmin}
+            onChangeText={canUpdateStore ? setStoreName : undefined}
+            editable={canUpdateStore && !isSaving}
             iconName="business"
             helperText="Aparecerá en los encabezados del POS, tickets y reportes de corte"
           />
@@ -337,13 +340,13 @@ export default function SettingsScreen() {
                 <TouchableOpacity
                   key={opt.value}
                   activeOpacity={0.75}
-                  disabled={!isManagerOrAdmin}
+                  disabled={!canUpdateStore}
                   onPress={() => setDefaultUnit(opt.value)}
-                  className={`flex-row items-center gap-2 px-3 py-2.5 rounded-xl border transition-all ${
+                  className={`flex-row items-center gap-2 px-3 py-2.5 rounded-xl border ${
                     isSelected
-                      ? "bg-primary/15 border-primary shadow-sm"
+                      ? "bg-primary/15 border-primary"
                       : "bg-surface-container-highest/70 border-surface-container-high"
-                  } ${!isManagerOrAdmin ? "opacity-60" : ""}`}
+                  } ${!canUpdateStore ? "opacity-60" : ""}`}
                 >
                   <View
                     className={`w-6 h-6 rounded-md items-center justify-center font-bold text-xs ${
@@ -380,8 +383,8 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        {/* Save button (Admin & Manager only) */}
-        {isManagerOrAdmin && (
+        {/* Save button (Admin only per stores:update) */}
+        {canUpdateStore && (
           <View className="pt-2 flex-row justify-end">
             <Button
               label={isSaving ? "Guardando cambios..." : "Guardar configuración"}
@@ -426,7 +429,7 @@ export default function SettingsScreen() {
               <Badge label={roleInfo.label} variant={roleInfo.variant} dot />
             </View>
             <Text className="text-[11px] text-on-surface-variant mt-1">
-              {isManagerOrAdmin
+              {isManager
                 ? "Permisos completos de administración y supervisión"
                 : "Permisos de cobro en terminal y lectura"}
             </Text>
@@ -447,7 +450,7 @@ export default function SettingsScreen() {
           <View className="flex-row items-center gap-3">
             <View
               className={`w-3 h-3 rounded-full ${
-                isWsConnected ? "bg-emerald-400 animate-pulse" : "bg-rose-400"
+                isWsConnected ? "bg-emerald-400" : "bg-rose-400"
               }`}
             />
             <View>

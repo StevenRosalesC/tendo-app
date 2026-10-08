@@ -1,7 +1,8 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import React from "react";
 import { Alert, Text, TouchableOpacity, View } from "react-native";
-import useAuthStore from "../../stores/useAuthStore";
+import usePermissions from "../../hooks/usePermissions";
+import { AppAction, AppResource } from "../../types/permissions.types";
 import Badge from "../ui/Badge";
 import Button from "../ui/Button";
 import Modal from "../ui/Modal";
@@ -32,7 +33,10 @@ export default function ProductDetailModal({
   onEdit,
   onDelete,
 }: ProductDetailModalProps) {
-  const isManagerOrAdmin = useAuthStore((s) => s.isManager());
+  const { can } = usePermissions();
+  const canUpdate = can(AppResource.PRODUCTS, AppAction.UPDATE);
+  const canDelete = can(AppResource.PRODUCTS, AppAction.DELETE);
+  const canViewCosts = can(AppResource.REPORTS, AppAction.READ) || canUpdate;
 
   if (!product) return null;
 
@@ -133,7 +137,7 @@ export default function ProductDetailModal({
         </View>
 
         {/* Cost & Margins (Managers & Admins only) */}
-        {isManagerOrAdmin && (
+        {canViewCosts && (
           <View className="bg-surface-container-low p-4 rounded-2xl border border-surface-container-high/60 flex-row items-center justify-between">
             <View>
               <Text className="text-[11px] font-semibold text-on-surface-variant uppercase">
@@ -196,28 +200,34 @@ export default function ProductDetailModal({
         )}
 
         {/* Action Buttons Toolbar */}
-        <View className="flex-row flex-wrap items-center justify-between gap-3 pt-3 border-t border-surface-container-high/60">
-          <Button
-            label="Eliminar"
-            variant="danger"
-            leftIcon={<MaterialIcons name="delete" size={16} color="#ffffff" />}
-            onPress={() => {
-              onClose();
-              onDelete?.(product);
-            }}
-          />
+        {(canDelete || canUpdate) && (
+          <View className="flex-row flex-wrap items-center justify-between gap-3 pt-3 border-t border-surface-container-high/60">
+            {canDelete && (
+              <Button
+                label="Eliminar"
+                variant="danger"
+                leftIcon={<MaterialIcons name="delete" size={16} color="#ffffff" />}
+                onPress={() => {
+                  onClose();
+                  onDelete?.(product);
+                }}
+              />
+            )}
 
-          <View className="flex-row items-center gap-2">
-            <Button
-              label="Editar"
-              leftIcon={<MaterialIcons name="edit" size={16} color="#0d0096" />}
-              onPress={() => {
-                onClose();
-                onEdit?.(product);
-              }}
-            />
+            {canUpdate && (
+              <View className="flex-row items-center gap-2 ml-auto">
+                <Button
+                  label="Editar"
+                  leftIcon={<MaterialIcons name="edit" size={16} color="#0d0096" />}
+                  onPress={() => {
+                    onClose();
+                    onEdit?.(product);
+                  }}
+                />
+              </View>
+            )}
           </View>
-        </View>
+        )}
       </View>
     </Modal>
   );

@@ -24,6 +24,7 @@ import Input from "../ui/Input";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import tendoApi from "../../services/api";
 import useAuthStore from "../../stores/useAuthStore";
+import usePermissions from "../../hooks/usePermissions";
 import { AppRole, UserListItem } from "../../types/auth.types";
 
 const ROLE_BADGE_CONFIG: Record<
@@ -39,7 +40,7 @@ const ROLE_BADGE_CONFIG: Record<
 export default function TeamManagementTab() {
   const { getToken } = useAuth();
   const { user: currentUser } = useCurrentUser();
-  const isAdmin = useAuthStore((s) => s.isAdmin());
+  const { canCreateUsers, canUpdateUsers, canDeleteUsers, isAdmin } = usePermissions();
   const queryClient = useQueryClient();
   const { width: windowWidth } = useWindowDimensions();
   const isDesktop = windowWidth >= 1024;
@@ -143,7 +144,7 @@ export default function TeamManagementTab() {
         </View>
 
         {/* Invite action button */}
-        {isAdmin && (
+        {canCreateUsers && (
           <View className="self-start md:self-auto">
             <Button
               label="Invitar Colaborador"
@@ -207,7 +208,7 @@ export default function TeamManagementTab() {
 
       {/* Pending invitations drawer / accordion banner */}
       {pendingInvitations.length > 0 && (
-        <View className="mb-6 bg-surface-container-low border border-amber-500/30 rounded-2xl overflow-hidden shadow-lg">
+        <View className="mb-6 bg-surface-container-low border border-amber-500/30 rounded-2xl overflow-hidden">
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={() => setShowPendingSection(!showPendingSection)}
@@ -315,10 +316,10 @@ export default function TeamManagementTab() {
               <TouchableOpacity
                 key={chip.id}
                 onPress={() => setSelectedRoleFilter(chip.id)}
-                className={`px-3 py-2 rounded-xl border text-xs font-semibold transition-all ${
+                className={`px-3 py-2 rounded-xl border text-xs font-semibold ${
                   isSelected
                     ? "bg-primary-container border-primary-container text-on-primary-container"
-                    : "bg-surface-container-low border-surface-container-high/60 hover:bg-surface-container"
+                    : "bg-surface-container-low border-surface-container-high/60"
                 }`}
               >
                 <Text
@@ -363,7 +364,7 @@ export default function TeamManagementTab() {
               ? "Prueba cambiando los filtros o la búsqueda."
               : "Invita a tu primer cajero o colaborador con el botón 'Invitar Colaborador'."}
           </Text>
-          {isAdmin && (
+          {canCreateUsers && (
             <View className="mt-4">
               <Button
                 label="Invitar Ahora"
@@ -376,7 +377,7 @@ export default function TeamManagementTab() {
         </View>
       ) : isDesktop ? (
         /* Desktop Workstation Table View */
-        <View className="bg-surface-container-low border border-surface-container-high rounded-3xl overflow-hidden shadow-xl">
+        <View className="bg-surface-container-low border border-surface-container-high rounded-3xl overflow-hidden">
           {/* Table Header */}
           <View className="flex-row items-center px-6 py-3.5 bg-surface-container border-b border-surface-container-high/60">
             <Text className="w-1/3 text-xs font-bold text-on-surface-variant uppercase tracking-wider">
@@ -403,7 +404,7 @@ export default function TeamManagementTab() {
               return (
                 <View
                   key={member.id}
-                  className="flex-row items-center px-6 py-4 hover:bg-surface-container/60 transition-colors"
+                  className="flex-row items-center px-6 py-4"
                 >
                   {/* Name & Avatar */}
                   <View className="w-1/3 flex-row items-center gap-3 pr-4">
@@ -443,7 +444,7 @@ export default function TeamManagementTab() {
 
                   {/* Action Buttons */}
                   <View className="flex-1 flex-row items-center justify-end gap-2">
-                    {isAdmin && !isSelf ? (
+                    {canUpdateUsers && !isSelf ? (
                       <Button
                         label="Cambiar Rol"
                         variant="outline"
@@ -508,7 +509,7 @@ export default function TeamManagementTab() {
                   />
                 </View>
 
-                {isAdmin && !isSelf && (
+                {canUpdateUsers && !isSelf && (
                   <View className="pt-2 border-t border-surface-container-high/40 flex-row justify-end">
                     <Button
                       label="Cambiar Rol"
