@@ -22,8 +22,8 @@ const defaultCertifications: CertificationItem[] = [
 ];
 
 export default function AuthFeatureShowcase({
-  title = "Punto de Venta Omnicanal",
-  subtitle = "Plataforma unificada de alta velocidad para retail moderno, cadenas de distribución y hostelería con sincronización de inventario distribuida.",
+  title = "Punto de Venta e Inventario",
+  subtitle = "Plataforma ágil y sencilla para registrar ventas, cobrar y controlar el inventario de tu tienda en tiempo real.",
   showHardwareCard = true,
   children,
   certifications = defaultCertifications,
