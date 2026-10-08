@@ -1,38 +1,50 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { usePathname, useRouter } from "expo-router";
 import { Text, TouchableOpacity, View } from "react-native";
+import usePermissions from "../hooks/usePermissions";
+import { AppAction, AppResource } from "../types/permissions.types";
 
 export default function Navigation() {
   const router = useRouter();
   const pathname = usePathname();
+  const { can } = usePermissions();
 
-  const navItems = [
+  const allNavItems = [
     {
       label: "Hub",
       icon: "dashboard" as const,
       route: "/home",
+      visible: true,
     },
     {
       label: "Terminal",
       icon: "point-of-sale" as const,
       route: "/terminal",
+      visible:
+        can(AppResource.SALES, AppAction.CREATE) ||
+        can(AppResource.SALES, AppAction.READ),
     },
     {
       label: "Stock",
       icon: "inventory-2" as const,
       route: "/inventory",
+      visible: can(AppResource.PRODUCTS, AppAction.READ),
     },
     {
       label: "Reportes",
       icon: "insights" as const,
       route: "/reports",
+      visible: can(AppResource.REPORTS, AppAction.READ),
     },
     {
       label: "Ajustes",
       icon: "settings" as const,
       route: "/settings",
+      visible: can(AppResource.STORES, AppAction.READ),
     },
   ];
+
+  const navItems = allNavItems.filter((item) => item.visible);
 
   return (
     <View className="w-full bg-surface-container-lowest/95 border-t border-surface-container-high/60 px-2 py-1 shadow-2xl">

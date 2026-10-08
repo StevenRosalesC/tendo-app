@@ -1,12 +1,17 @@
-export type AppRole = "ADMIN" | "MANAGER" | "CASHIER" | "STAFF";
+import { AppAction, AppResource, Role } from "./permissions.types";
+
+export { AppAction, AppResource, Role };
+export type AppRole = Role | "ADMIN" | "MANAGER" | "CASHIER" | "STAFF";
 
 export type ProductUnit = "UNIT" | "KG" | "LB" | "G" | "L" | "ML" | "M";
 
 export interface UserPermissions {
-  stores: string[];
-  users: string[];
-  products: string[];
-  sales: string[];
+  stores?: string[];
+  users?: string[];
+  products?: string[];
+  sales?: string[];
+  reports?: string[];
+  [key: string]: string[] | undefined;
 }
 
 export interface StoreData {
