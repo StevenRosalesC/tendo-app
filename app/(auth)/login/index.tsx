@@ -444,7 +444,7 @@ export default function LoginPage() {
                       activeOpacity={0.85}
                       disabled={loading || fetchStatus === "fetching"}
                       onPress={handleVerifyMfa}
-                      className="w-full h-12 bg-primary-container rounded-xl flex-row items-center justify-center gap-2 shadow-lg shadow-primary-container/30 active:scale-[0.98]"
+                      className="w-full h-12 bg-primary-container rounded-xl flex-row items-center justify-center gap-2"
                     >
                       {loading || fetchStatus === "fetching" ? (
                         <ActivityIndicator size="small" color="#0d0096" />

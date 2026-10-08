@@ -1,7 +1,8 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import React from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
-import useAuthStore from "../../stores/useAuthStore";
+import usePermissions from "../../hooks/usePermissions";
+import { AppAction, AppResource } from "../../types/permissions.types";
 import { Product } from "./types";
 
 export interface InventoryGridItemProps {
@@ -29,7 +30,9 @@ export default function InventoryGridItem({
   onEditProduct,
   onMoreOptions,
 }: InventoryGridItemProps) {
-  const isManagerOrAdmin = useAuthStore((s) => s.isManager());
+  const { can } = usePermissions();
+  const canUpdateProducts = can(AppResource.PRODUCTS, AppAction.UPDATE);
+  const canViewCosts = can(AppResource.REPORTS, AppAction.READ) || canUpdateProducts;
   const isOutOfStock = product.stockWarning === "out_of_stock";
   const isLowStock = product.stockWarning === "low_stock";
   const isTracked = product.trackStock !== false;
@@ -174,7 +177,7 @@ export default function InventoryGridItem({
             ${product.price.toFixed(2)}
             {product.unit && product.unit !== "UNIT" ? ` /${unitSuffix}` : ""}
           </Text>
-          {isManagerOrAdmin && (
+          {canViewCosts && (
             <Text className="text-[11px] text-on-surface-variant">
               Costo: ${product.cost.toFixed(2)} ({product.margin}% mg)
             </Text>
@@ -184,17 +187,21 @@ export default function InventoryGridItem({
 
       {/* Action Row */}
       <View className="flex-row items-center justify-end gap-1.5 mt-3 pt-2 border-t border-surface-container-high/40">
-        <TouchableOpacity
-          onPress={() => onEditProduct?.(product.id)}
-          className="h-8 px-3 rounded-lg bg-surface-container-high hover:bg-surface-container-highest flex-row items-center gap-1.5"
-        >
-          <MaterialIcons name="edit" size={15} color="#c7c4d7" />
-          <Text className="text-xs font-medium text-on-surface">Editar</Text>
-        </TouchableOpacity>
+        {canUpdateProducts && (
+          <TouchableOpacity
+            onPress={() => onEditProduct?.(product.id)}
+            activeOpacity={0.7}
+            className="h-8 px-3 rounded-lg bg-surface-container-high flex-row items-center gap-1.5"
+          >
+            <MaterialIcons name="edit" size={15} color="#c7c4d7" />
+            <Text className="text-xs font-medium text-on-surface">Editar</Text>
+          </TouchableOpacity>
+        )}
 
         <TouchableOpacity
           onPress={() => onMoreOptions?.(product.id)}
-          className="w-8 h-8 rounded-lg bg-surface-container-high hover:bg-surface-container-highest items-center justify-center"
+          activeOpacity={0.7}
+          className="w-8 h-8 rounded-lg bg-surface-container-high items-center justify-center"
         >
           <MaterialIcons name="more-vert" size={16} color="#c7c4d7" />
         </TouchableOpacity>

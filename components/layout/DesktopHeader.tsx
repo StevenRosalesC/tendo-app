@@ -1,4 +1,5 @@
 import { MaterialIcons } from "@expo/vector-icons";
+import { useEffect, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import TendoLogo from "../ui/TendoLogo";
 
@@ -6,7 +7,7 @@ import useCartStore from "../../stores/useCartStore";
 
 export interface DesktopHeaderProps {
   pageTitle: string;
-  sessionTime: string;
+  sessionTime?: string;
   operatorInitial: string;
   onLock: () => void;
   onOpenOrder?: () => void;
@@ -27,6 +28,27 @@ export default function DesktopHeader({
   branchName = "Sucursal Central",
   isOnline = true,
 }: DesktopHeaderProps) {
+  const [localTime, setLocalTime] = useState<string>("");
+
+  useEffect(() => {
+    if (sessionTime) return;
+    const updateTime = () => {
+      const now = new Date();
+      setLocalTime(
+        now.toLocaleTimeString("es-MX", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        })
+      );
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, [sessionTime]);
+
+  const displayTime = sessionTime || localTime;
+
   const totalUnits = useCartStore((s) =>
     s.items.reduce((sum, item) => sum + item.quantity, 0)
   );
@@ -51,7 +73,7 @@ export default function DesktopHeader({
         <View className="flex-row items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high">
           <View
             className={`w-2 h-2 rounded-full ${
-              isOnline ? "bg-primary animate-pulse" : "bg-error"
+              isOnline ? "bg-primary" : "bg-error"
             }`}
           />
           <Text className="text-xs font-semibold text-on-surface">
@@ -73,7 +95,7 @@ export default function DesktopHeader({
         <View className="flex-row items-center gap-1.5 bg-surface-container-high px-2.5 sm:px-3 py-1 rounded-lg border border-surface-container-highest/60">
           <MaterialIcons name="timer" size={15} color="#c3c0ff" />
           <Text className="text-xs font-mono font-bold text-on-surface">
-            {sessionTime}
+            {displayTime}
           </Text>
         </View>
 
@@ -82,7 +104,7 @@ export default function DesktopHeader({
           activeOpacity={0.7}
           onPress={handleOpenOrder}
           accessibilityLabel="Abrir pedido actual"
-          className="h-9 px-3 bg-primary-container hover:bg-primary-container/80 rounded-lg flex-row items-center gap-2 border border-primary/30 shadow-sm"
+          className="h-9 px-3 bg-primary-container rounded-lg flex-row items-center gap-2 border border-primary/30"
         >
           <MaterialIcons name="shopping-bag" size={17} color="#0d0096" />
           <Text className="text-xs font-bold text-on-primary-container">
@@ -101,7 +123,7 @@ export default function DesktopHeader({
           activeOpacity={0.7}
           onPress={onLock}
           accessibilityLabel="Bloquear terminal"
-          className="h-9 px-2.5 sm:px-3 bg-surface-container-high hover:bg-surface-container-highest rounded-lg flex-row items-center gap-1.5 border border-surface-container-highest/60"
+          className="h-9 px-2.5 sm:px-3 bg-surface-container-high rounded-lg flex-row items-center gap-1.5 border border-surface-container-highest/60"
         >
           <MaterialIcons name="lock" size={16} color="#c7c4d7" />
           <Text className="text-xs font-medium text-on-surface hidden 2xl:inline">
@@ -109,7 +131,7 @@ export default function DesktopHeader({
           </Text>
         </TouchableOpacity>
 
-        <View className="w-8 h-8 rounded-full bg-primary items-center justify-center ml-0.5 sm:ml-1 shadow-sm">
+        <View className="w-8 h-8 rounded-full bg-primary items-center justify-center ml-0.5 sm:ml-1">
           <Text className="text-xs font-bold text-on-primary">
             {operatorInitial}
           </Text>

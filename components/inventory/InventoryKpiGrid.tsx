@@ -117,7 +117,7 @@ export default function InventoryKpiGrid({
     <TouchableOpacity
       activeOpacity={onToggleCriticalFilter ? 0.75 : 1}
       onPress={onToggleCriticalFilter}
-      className={`p-3.5 sm:p-4 rounded-2xl border flex-col justify-between shadow-sm flex-1 min-h-[110px] transition-all ${
+      className={`p-3.5 sm:p-4 rounded-2xl border flex-col justify-between flex-1 min-h-[110px] ${
         isCriticalFilterActive
           ? "bg-error-container/30 border-error"
           : "bg-surface-container border-surface-container-high/60"

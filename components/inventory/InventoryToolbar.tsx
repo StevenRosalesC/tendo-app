@@ -37,7 +37,7 @@ export default function InventoryToolbar({
           <TouchableOpacity
             onPress={onScanPress}
             activeOpacity={0.7}
-            className="p-1 -ml-1 mr-1 rounded-md hover:bg-surface-container-highest/60 items-center justify-center"
+            className="p-1 -ml-1 mr-1 rounded-md items-center justify-center"
             accessibilityLabel="Escanear código de barras para buscar"
           >
             <MaterialIcons name="qr-code-scanner" size={20} color="#c0c1ff" />
@@ -54,7 +54,8 @@ export default function InventoryToolbar({
           {searchQuery.length > 0 && (
             <TouchableOpacity
               onPress={() => onSearchChange("")}
-              className="p-1 mr-1 rounded-full hover:bg-surface-container-highest"
+              activeOpacity={0.7}
+              className="p-1 mr-1 rounded-full"
             >
               <MaterialIcons name="close" size={16} color="#c7c4d7" />
             </TouchableOpacity>
@@ -74,10 +75,11 @@ export default function InventoryToolbar({
           <View className="flex-row items-center p-1 rounded-lg bg-surface-container-high border border-surface-container-highest/50">
             <TouchableOpacity
               onPress={() => onInStockChange(undefined)}
+              activeOpacity={0.7}
               className={`px-3 py-1.5 rounded-md flex-row items-center gap-1.5 ${
                 inStock === undefined
-                  ? "bg-surface-container text-on-surface shadow-xs"
-                  : "hover:bg-surface-container/60"
+                  ? "bg-surface-container text-on-surface"
+                  : ""
               }`}
             >
               <MaterialIcons
@@ -96,10 +98,11 @@ export default function InventoryToolbar({
 
             <TouchableOpacity
               onPress={() => onInStockChange(true)}
+              activeOpacity={0.7}
               className={`px-3 py-1.5 rounded-md flex-row items-center gap-1.5 ${
                 inStock === true
-                  ? "bg-surface-container text-on-surface shadow-xs"
-                  : "hover:bg-surface-container/60"
+                  ? "bg-surface-container text-on-surface"
+                  : ""
               }`}
             >
               <View className="w-2 h-2 rounded-full bg-secondary" />
@@ -117,10 +120,11 @@ export default function InventoryToolbar({
           <View className="flex-row items-center p-1 rounded-lg bg-surface-container-high border border-surface-container-highest/50">
             <TouchableOpacity
               onPress={() => onViewModeChange("table")}
+              activeOpacity={0.7}
               className={`w-9 h-9 rounded items-center justify-center ${
                 viewMode === "table"
-                  ? "bg-surface-container text-on-surface shadow-xs"
-                  : "hover:bg-surface-container/60"
+                  ? "bg-surface-container text-on-surface"
+                  : ""
               }`}
             >
               <MaterialIcons
@@ -132,10 +136,11 @@ export default function InventoryToolbar({
 
             <TouchableOpacity
               onPress={() => onViewModeChange("grid")}
+              activeOpacity={0.7}
               className={`w-9 h-9 rounded items-center justify-center ${
                 viewMode === "grid"
-                  ? "bg-surface-container text-on-surface shadow-xs"
-                  : "hover:bg-surface-container/60"
+                  ? "bg-surface-container text-on-surface"
+                  : ""
               }`}
             >
               <MaterialIcons

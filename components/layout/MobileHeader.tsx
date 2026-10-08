@@ -83,7 +83,7 @@ export default function MobileHeader({
               {shiftStatus}
             </Text>
           </View>
-          <View className="w-8 h-8 rounded-full bg-primary items-center justify-center shadow-sm">
+          <View className="w-8 h-8 rounded-full bg-primary items-center justify-center">
             <Text className="text-xs font-bold text-on-primary">
               {operatorInitial}
             </Text>

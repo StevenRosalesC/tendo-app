@@ -1,7 +1,8 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import React from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
-import useAuthStore from "../../stores/useAuthStore";
+import usePermissions from "../../hooks/usePermissions";
+import { AppAction, AppResource } from "../../types/permissions.types";
 import { TableData, TableRow } from "../ui/Table";
 import { Product } from "./types";
 
@@ -32,16 +33,18 @@ export default function InventoryTableRow({
   onMoreOptions,
   isAlternate = false,
 }: InventoryTableRowProps) {
-  const isManagerOrAdmin = useAuthStore((s) => s.isManager());
+  const { can } = usePermissions();
+  const canUpdateProducts = can(AppResource.PRODUCTS, AppAction.UPDATE);
+  const canViewCosts = can(AppResource.REPORTS, AppAction.READ) || canUpdateProducts;
   const isOutOfStock = product.stockWarning === "out_of_stock";
   const isLowStock = product.stockWarning === "low_stock";
   const isTracked = product.trackStock !== false;
   const unitSuffix = product.unit ? UNIT_SHORT[product.unit] || "u" : "u";
 
   const customRowClass = isLowStock
-    ? "bg-error-container/10 hover:bg-error-container/20"
+    ? "bg-error-container/10"
     : isOutOfStock
-    ? "opacity-75 bg-surface-container-lowest/20 hover:bg-surface-container"
+    ? "bg-surface-container-lowest/20"
     : "";
 
   return (
@@ -192,7 +195,7 @@ export default function InventoryTableRow({
 
       {/* 6. Cost & Profit Margin */}
       <TableData className="w-36" align="right">
-        {isManagerOrAdmin ? (
+        {canViewCosts ? (
           <View className="items-end">
             <Text className="text-xs font-semibold text-on-surface font-mono">
               ${product.cost.toFixed(2)}
@@ -242,17 +245,21 @@ export default function InventoryTableRow({
       {/* 8. Quick Action Buttons */}
       <TableData className="w-28" align="right">
         <View className="flex-row items-center justify-end gap-1">
-          <TouchableOpacity
-            onPress={() => onEditProduct?.(product.id)}
-            className="w-8 h-8 rounded hover:bg-surface-container-high items-center justify-center"
-            accessibilityLabel="Editar producto"
-          >
-            <MaterialIcons name="edit" size={18} color="#c7c4d7" />
-          </TouchableOpacity>
+          {canUpdateProducts && (
+            <TouchableOpacity
+              onPress={() => onEditProduct?.(product.id)}
+              activeOpacity={0.7}
+              className="w-8 h-8 rounded items-center justify-center"
+              accessibilityLabel="Editar producto"
+            >
+              <MaterialIcons name="edit" size={18} color="#c7c4d7" />
+            </TouchableOpacity>
+          )}
 
           <TouchableOpacity
             onPress={() => onMoreOptions?.(product.id)}
-            className="w-8 h-8 rounded hover:bg-surface-container-high items-center justify-center"
+            activeOpacity={0.7}
+            className="w-8 h-8 rounded items-center justify-center"
             accessibilityLabel="Más opciones"
           >
             <MaterialIcons name="more-vert" size={18} color="#c7c4d7" />

@@ -220,7 +220,7 @@ export default function Drawer({
                   onPress={onClose}
                   activeOpacity={0.7}
                   accessibilityLabel="Cerrar drawer"
-                  className="w-8 h-8 rounded-lg bg-surface-container-highest items-center justify-center hover:bg-surface-bright"
+                  className="w-8 h-8 rounded-lg bg-surface-container-highest items-center justify-center"
                 >
                   <MaterialIcons name="close" size={18} color="#c7c4d7" />
                 </TouchableOpacity>

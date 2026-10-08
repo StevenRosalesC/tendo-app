@@ -33,31 +33,27 @@ const variantStyles: Record<
   { container: string; text: string; spinnerColor: string }
 > = {
   primary: {
-    container:
-      "bg-primary-container shadow-lg shadow-primary-container/25 border-transparent active:scale-[0.98]",
+    container: "bg-primary-container border-transparent",
     text: "text-on-primary-container font-bold",
     spinnerColor: "#0d0096",
   },
   secondary: {
-    container:
-      "bg-surface-container-high border-surface-container-highest/60 hover:bg-surface-container-highest",
+    container: "bg-surface-container-high border-surface-container-highest/60",
     text: "text-on-surface font-semibold",
     spinnerColor: "#c0c1ff",
   },
   outline: {
-    container:
-      "bg-transparent border-surface-container-high hover:bg-surface-container",
+    container: "bg-transparent border-surface-container-high",
     text: "text-on-surface font-semibold",
     spinnerColor: "#c0c1ff",
   },
   ghost: {
-    container: "bg-transparent border-transparent hover:bg-surface-container",
-    text: "text-on-surface-variant hover:text-on-surface font-medium",
+    container: "bg-transparent border-transparent",
+    text: "text-on-surface-variant font-medium",
     spinnerColor: "#c0c1ff",
   },
   danger: {
-    container:
-      "bg-status-danger/15 border-status-danger/30 hover:bg-status-danger/25 active:bg-status-danger/30",
+    container: "bg-status-danger/15 border-status-danger/30",
     text: "text-status-danger font-bold",
     spinnerColor: "#EF4444",
   },
@@ -93,6 +89,7 @@ export default function Button({
   disabled = false,
   className = "",
   activeOpacity = 0.85,
+  style,
   ...rest
 }: ButtonProps) {
   const vStyle = variantStyles[variant];
@@ -104,11 +101,10 @@ export default function Button({
     <TouchableOpacity
       activeOpacity={activeOpacity}
       disabled={isDisabled}
+      style={[{ opacity: isDisabled ? 0.6 : 1 }, style]}
       className={`flex-row items-center justify-center border ${
         fullWidth ? "w-full" : ""
-      } ${sStyle.container} ${vStyle.container} ${
-        isDisabled ? "opacity-60" : ""
-      } ${className}`}
+      } ${sStyle.container} ${vStyle.container} ${className}`}
       {...rest}
     >
       {loading ? (

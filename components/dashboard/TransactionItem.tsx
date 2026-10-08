@@ -19,7 +19,7 @@ export interface TransactionItemProps {
 
 export default function TransactionItem({ transaction: tx }: TransactionItemProps) {
   return (
-    <View className="flex-row items-center justify-between p-3 rounded-xl bg-surface-container hover:bg-surface-container-high border border-surface-container-high/40">
+    <View className="flex-row items-center justify-between p-3 rounded-xl bg-surface-container border border-surface-container-high/40">
       <View className="flex-row items-center gap-3 min-w-0 flex-1 mr-3">
         <View className="w-10 h-10 rounded-xl bg-surface-container-highest items-center justify-center shrink-0">
           <MaterialIcons name={tx.iconName} size={20} color={tx.iconColor} />

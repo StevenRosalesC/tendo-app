@@ -3,6 +3,9 @@ import { useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import TendoLogo from "../ui/TendoLogo";
 
+import usePermissions from "../../hooks/usePermissions";
+import { AppAction, AppResource } from "../../types/permissions.types";
+
 export interface SidebarLink {
   label: string;
   icon: keyof typeof MaterialIcons.glyphMap;
@@ -32,39 +35,49 @@ export default function DesktopSidebar({
   onSignOut,
 }: DesktopSidebarProps) {
   const [showUserMenu, setShowUserMenu] = useState<boolean>(false);
+  const { can } = usePermissions();
 
-  const sidebarLinks: SidebarLink[] = [
+  const allSidebarLinks: (SidebarLink & { visible?: boolean })[] = [
     {
       label: "Inicio Hub",
       icon: "dashboard",
       route: "/home",
       active: currentPath === "/home" || currentPath === "/",
+      visible: true,
     },
     {
       label: "Terminal POS",
       icon: "point-of-sale",
       route: "/terminal",
       active: currentPath === "/terminal",
+      visible:
+        can(AppResource.SALES, AppAction.CREATE) ||
+        can(AppResource.SALES, AppAction.READ),
     },
     {
       label: "Catálogo / Inventario",
       icon: "inventory-2",
       route: "/inventory",
       active: currentPath === "/inventory",
+      visible: can(AppResource.PRODUCTS, AppAction.READ),
     },
     {
       label: "Reportes y Ventas",
       icon: "insights",
       route: "/reports",
       active: currentPath === "/reports",
+      visible: can(AppResource.REPORTS, AppAction.READ),
     },
     {
       label: "Ajustes de Tienda",
       icon: "settings",
       route: "/settings",
       active: currentPath === "/settings",
+      visible: can(AppResource.STORES, AppAction.READ),
     },
   ];
+
+  const sidebarLinks = allSidebarLinks.filter((link) => link.visible !== false);
 
   return (
     <View className="w-72 bg-surface-container-low border-r border-surface-container-high/60 flex-col justify-between hidden md:flex shrink-0">
@@ -90,7 +103,7 @@ export default function DesktopSidebar({
               className={`flex-row items-center gap-3 px-4 py-2.5 rounded-xl ${
                 link.active
                   ? "bg-surface-container-high border border-surface-container-highest/60"
-                  : "hover:bg-surface-container"
+                  : ""
               }`}
             >
               <MaterialIcons
@@ -102,7 +115,7 @@ export default function DesktopSidebar({
                 className={`text-sm ${
                   link.active
                     ? "text-on-surface font-bold"
-                    : "text-on-surface-variant font-medium hover:text-on-surface"
+                    : "text-on-surface-variant font-medium"
                 }`}
               >
                 {link.label}
@@ -147,8 +160,9 @@ export default function DesktopSidebar({
               </Text>
             </View>
             <TouchableOpacity
+              activeOpacity={0.7}
               onPress={() => setShowUserMenu(!showUserMenu)}
-              className="p-1 hover:bg-surface-container-high rounded-lg"
+              className="p-1 rounded-lg"
             >
               <MaterialIcons name="more-vert" size={18} color="#c7c4d7" />
             </TouchableOpacity>
@@ -158,11 +172,12 @@ export default function DesktopSidebar({
           {showUserMenu && (
             <View className="absolute bottom-16 right-0 w-48 bg-surface-container-high border border-surface-container-highest rounded-xl p-1.5 shadow-2xl z-50">
               <TouchableOpacity
+                activeOpacity={0.7}
                 onPress={() => {
                   setShowUserMenu(false);
                   onSignOut();
                 }}
-                className="flex-row items-center gap-2 px-3 py-2 rounded-lg hover:bg-status-danger/20"
+                className="flex-row items-center gap-2 px-3 py-2 rounded-lg"
               >
                 <MaterialIcons name="lock" size={16} color="#EF4444" />
                 <Text className="text-xs font-bold text-status-danger">

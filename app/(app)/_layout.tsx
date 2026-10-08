@@ -1,7 +1,7 @@
 import { useAuth, useUser } from "@clerk/expo";
 import { Redirect, Slot, usePathname, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import DesktopHeader from "../../components/layout/DesktopHeader";
@@ -23,25 +23,6 @@ export default function AppLayout() {
 
   // Initialize push notifications lifecycle and listeners
   usePushNotifications();
-
-  const [currentTime, setCurrentTime] = useState<string>("");
-
-  // Live real-time clock for station header
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      setCurrentTime(
-        now.toLocaleTimeString("es-MX", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        })
-      );
-    };
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
-  }, []);
 
   if (!isLoaded) {
     return (
@@ -102,7 +83,6 @@ export default function AppLayout() {
           {/* Top Header: Desktop variant */}
           <DesktopHeader
             pageTitle={pageInfo.desktop}
-            sessionTime={currentTime}
             operatorInitial={operatorInitial}
             stationName={roleName}
             branchName={storeName}

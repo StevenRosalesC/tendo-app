@@ -170,7 +170,7 @@ export function TableRow({
       : isAlternate
       ? "bg-surface-container-lowest/30"
       : "bg-transparent"
-  } ${interactive ? "active:bg-surface-container hover:bg-surface-container" : ""} ${className}`;
+  } ${className}`;
 
   if (interactive) {
     return (

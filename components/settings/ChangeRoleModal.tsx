@@ -168,10 +168,10 @@ export default function ChangeRoleModal({
                 activeOpacity={0.7}
                 onPress={() => setSelectedRole(item.role)}
                 disabled={isSubmitting}
-                className={`p-3.5 rounded-2xl border transition-all flex-row items-center gap-3.5 ${
+                className={`p-3.5 rounded-2xl border flex-row items-center gap-3.5 ${
                   isSelected
                     ? `${item.colorClass} border-2`
-                    : "bg-surface-container-low border-surface-container-high/60 hover:bg-surface-container"
+                    : "bg-surface-container-low border-surface-container-high/60"
                 }`}
               >
                 {/* Radio indicator */}

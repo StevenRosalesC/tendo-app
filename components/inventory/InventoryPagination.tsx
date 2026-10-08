@@ -73,12 +73,10 @@ export default function InventoryPagination({
         <TouchableOpacity
           onPress={() => onPageChange?.(currentPage - 1)}
           disabled={currentPage <= 1}
+          activeOpacity={0.7}
+          style={{ opacity: currentPage <= 1 ? 0.4 : 1 }}
           accessibilityLabel="Página anterior"
-          className={`h-8 sm:h-9 px-2 sm:px-3 rounded-lg flex-row items-center gap-1 border border-surface-container-highest/40 ${
-            currentPage <= 1
-              ? "bg-surface-container-high/40 opacity-40"
-              : "bg-surface-container-high hover:bg-surface-bright"
-          }`}
+          className="h-8 sm:h-9 px-2 sm:px-3 rounded-lg flex-row items-center gap-1 border border-surface-container-highest/40 bg-surface-container-high"
         >
           <MaterialIcons name="chevron-left" size={16} color="#c7c4d7" />
           <Text className="text-xs font-medium text-on-surface hidden sm:inline">
@@ -106,10 +104,11 @@ export default function InventoryPagination({
               <TouchableOpacity
                 key={`page-${pageNum}`}
                 onPress={() => onPageChange?.(pageNum)}
+                activeOpacity={0.7}
                 className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg items-center justify-center ${
                   isCurrent
-                    ? "bg-primary shadow-sm"
-                    : "bg-surface-container-high hover:bg-surface-bright"
+                    ? "bg-primary"
+                    : "bg-surface-container-high"
                 }`}
               >
                 <Text
@@ -127,12 +126,10 @@ export default function InventoryPagination({
         <TouchableOpacity
           onPress={() => onPageChange?.(currentPage + 1)}
           disabled={currentPage >= safeTotalPages}
+          activeOpacity={0.7}
+          style={{ opacity: currentPage >= safeTotalPages ? 0.4 : 1 }}
           accessibilityLabel="Página siguiente"
-          className={`h-8 sm:h-9 px-2 sm:px-3 rounded-lg flex-row items-center gap-1 border border-surface-container-highest/40 ${
-            currentPage >= safeTotalPages
-              ? "bg-surface-container-high/40 opacity-40"
-              : "bg-surface-container-high hover:bg-surface-bright"
-          }`}
+          className="h-8 sm:h-9 px-2 sm:px-3 rounded-lg flex-row items-center gap-1 border border-surface-container-highest/40 bg-surface-container-high"
         >
           <Text className="text-xs font-medium text-on-surface hidden sm:inline">
             Siguiente

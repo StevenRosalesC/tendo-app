@@ -55,7 +55,7 @@ export default function InventoryHeader({
           <TouchableOpacity
             onPress={onNewProduct}
             activeOpacity={0.85}
-            className="h-10 px-3.5 sm:px-4 rounded-xl bg-primary-container shadow-sm flex-row items-center justify-center gap-2 active:scale-95 shrink-0"
+            className="h-10 px-3.5 sm:px-4 rounded-xl bg-primary-container flex-row items-center justify-center gap-2 shrink-0"
           >
             <MaterialIcons name="add" size={18} color="#0d0096" />
             <Text className="text-xs sm:text-sm font-bold text-on-primary-container">
@@ -83,7 +83,7 @@ export default function InventoryHeader({
               onPress={onRefresh}
               disabled={isRefreshing}
               activeOpacity={0.8}
-              className="h-8 sm:h-9 px-2.5 sm:px-3 rounded-lg sm:rounded-xl bg-surface-container-high border border-surface-container-highest/60 hover:bg-surface-bright flex-row items-center gap-1.5 shadow-xs"
+              className="h-8 sm:h-9 px-2.5 sm:px-3 rounded-lg sm:rounded-xl bg-surface-container-high border border-surface-container-highest/60 flex-row items-center gap-1.5"
             >
               {isRefreshing ? (
                 <ActivityIndicator size="small" color="#c0c1ff" />
@@ -102,7 +102,7 @@ export default function InventoryHeader({
               onPress={onExportCsv}
               disabled={isExporting}
               activeOpacity={0.8}
-              className="h-8 sm:h-9 px-2.5 sm:px-3 rounded-lg sm:rounded-xl bg-surface-container-high border border-surface-container-highest/60 hover:bg-surface-bright flex-row items-center gap-1.5 shadow-xs"
+              className="h-8 sm:h-9 px-2.5 sm:px-3 rounded-lg sm:rounded-xl bg-surface-container-high border border-surface-container-highest/60 flex-row items-center gap-1.5"
             >
               {isExporting ? (
                 <ActivityIndicator size="small" color="#c0c1ff" />
