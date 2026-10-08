@@ -15,6 +15,7 @@ import AlertBanner from "../ui/AlertBanner";
 import Badge from "../ui/Badge";
 import Button from "../ui/Button";
 import Modal from "../ui/Modal";
+import TendoLogo from "../ui/TendoLogo";
 import tendoApi, { SaleRecord } from "../../services/api";
 import useCartStore from "../../stores/useCartStore";
 
@@ -164,6 +165,13 @@ export default function CheckoutModal({
           {/* Transaction Summary Card */}
           <View className="bg-surface-container-low rounded-2xl border border-surface-container-high p-4 gap-3">
             <View className="flex-row items-center justify-between pb-2 border-b border-surface-container-high/60">
+              <TendoLogo variant="horizontal" size={18} wordmarkColor="#FFFFFF" />
+              <Text className="text-[11px] font-mono text-on-surface-variant font-medium">
+                Comprobante Oficial
+              </Text>
+            </View>
+
+            <View className="flex-row items-center justify-between">
               <Text className="text-xs text-on-surface-variant font-medium">
                 Total Pagado
               </Text>

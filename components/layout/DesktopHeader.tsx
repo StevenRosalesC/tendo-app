@@ -1,5 +1,6 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { Text, TouchableOpacity, View } from "react-native";
+import TendoLogo from "../ui/TendoLogo";
 
 import useCartStore from "../../stores/useCartStore";
 
@@ -37,7 +38,8 @@ export default function DesktopHeader({
     <View className="h-16 bg-surface-container/90 border-b border-surface-container-high/60 px-6 hidden md:flex flex-row items-center justify-between z-40 backdrop-blur-md">
       <View className="flex-row items-center gap-4 min-w-0">
         <View className="flex-row items-center gap-1.5 text-xs text-on-surface-variant font-medium">
-          <Text className="text-xs text-on-surface-variant font-medium">
+          <TendoLogo variant="emblem" size={16} color="#017AF6" />
+          <Text className="text-xs text-on-surface-variant font-semibold">
             Tendo POS
           </Text>
           <MaterialIcons name="chevron-right" size={14} color="#908fa0" />

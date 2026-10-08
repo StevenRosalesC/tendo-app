@@ -1,6 +1,7 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
+import TendoLogo from "../ui/TendoLogo";
 
 export interface SidebarLink {
   label: string;
@@ -69,16 +70,12 @@ export default function DesktopSidebar({
     <View className="w-72 bg-surface-container-low border-r border-surface-container-high/60 flex-col justify-between hidden md:flex shrink-0">
       <View className="flex-col">
         {/* Logo Brand Header */}
-        <View className="h-16 px-6 flex-row items-center gap-3 bg-surface-container-low border-b border-surface-container-high/40">
-          <View className="w-9 h-9 rounded-lg bg-primary-container items-center justify-center">
-            <MaterialIcons name="point-of-sale" size={22} color="#0d0096" />
-          </View>
+        <View className="h-16 px-5 flex-row items-center gap-3 bg-surface-container-low border-b border-surface-container-high/40">
+          <TendoLogo variant="emblem" size={32} color="#017AF6" />
           <View className="flex-col">
-            <Text className="text-base font-extrabold text-on-surface tracking-tight leading-none">
-              Tendo
-            </Text>
+            <TendoLogo variant="wordmark" height={16} color="#FFFFFF" />
             <Text className="text-[10px] font-bold text-on-surface-variant tracking-wider uppercase leading-none mt-1">
-              Omnichannel POS
+              Punto de Venta
             </Text>
           </View>
         </View>

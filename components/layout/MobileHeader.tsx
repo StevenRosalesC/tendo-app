@@ -2,6 +2,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import useCartStore from "../../stores/useCartStore";
+import TendoLogo from "../ui/TendoLogo";
 
 export interface MobileHeaderProps {
   pageTitle: string;
@@ -34,6 +35,7 @@ export default function MobileHeader({
     <View className="w-full bg-surface-container-lowest/80 border-b border-surface-container-high/40 px-4 py-3 flex md:hidden">
       <View className="w-full flex-row items-center justify-between">
         <View className="flex-row items-center gap-2">
+          <TendoLogo variant="emblem" size={20} color="#017AF6" />
           <View className="flex-row items-center gap-1.5">
             <View
               className={`w-2 h-2 rounded-full ${

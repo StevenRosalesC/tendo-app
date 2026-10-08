@@ -1,5 +1,6 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { Text, View } from "react-native";
+import TendoLogo from "../ui/TendoLogo";
 
 export interface AuthHeaderProps {
   badgeLabel?: string;
@@ -15,15 +16,11 @@ export default function AuthHeader({
   return (
     <View className="w-full px-6 py-4 flex-row items-center justify-between border-b border-surface-container-high/40">
       <View className="flex-row items-center gap-3">
-        <View className="w-9 h-9 rounded-xl bg-surface-container-high items-center justify-center">
-          <MaterialIcons name="point-of-sale" size={20} color="#c0c1ff" />
-        </View>
+        <TendoLogo variant="emblem" size={32} color="#017AF6" />
         <View>
-          <Text className="text-base font-bold text-on-surface tracking-tight">
-            Tendo
-          </Text>
-          <Text className="text-xs text-on-surface-variant font-medium">
-            Omnichannel OS
+          <TendoLogo variant="wordmark" height={16} color="#FFFFFF" />
+          <Text className="text-[10px] text-on-surface-variant font-bold tracking-wider uppercase leading-none mt-1">
+            Punto de Venta
           </Text>
         </View>
       </View>

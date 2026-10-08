@@ -1,0 +1,144 @@
+import React from "react";
+import { StyleProp, View, ViewStyle } from "react-native";
+import Svg, { G, Path } from "react-native-svg";
+
+export type TendoLogoVariant = "full" | "emblem" | "wordmark" | "horizontal";
+
+export interface TendoLogoProps {
+  variant?: TendoLogoVariant;
+  size?: number;
+  width?: number;
+  height?: number;
+  color?: string;
+  emblemColor?: string;
+  wordmarkColor?: string;
+  style?: StyleProp<ViewStyle>;
+  className?: string;
+}
+
+const BRAND_BLUE = "#017AF6";
+
+// Path definitions from official assets/logo.svg
+const EMBLEM_PATHS = [
+  "M 647.2 534.2 l 0.3 27.3 184.9 0.3 184.9 0.2 9.1 -6.9 c 20.2 -15.1 48.1 -32 69 -41.6 5.8 -2.7 10.6 -5.3 10.6 -5.7 0 -0.4 -103.3 -0.8 -229.5 -0.8 l -229.5 0 0.2 27.2 z",
+  "M 1240 508.1 c -37.3 2.7 -81.2 13.8 -116.7 29.5 -80 35.3 -145.3 97.6 -184.7 176.3 -16.7 33.2 -28.1 71.2 -33.2 110.6 -2.2 16.7 -2.5 60.5 -0.5 82.7 1.4 16.1 3.1 21.1 3.1 9.3 0 -12.6 3.2 -36.9 7.6 -57.7 8.1 -38.6 24.7 -82.1 43 -112.8 3.1 -5.2 6.2 -10.4 6.8 -11.5 5.2 -9.4 20.8 -31.1 28.9 -40 1 -1.1 3.3 -3.9 5 -6.2 1.8 -2.3 10.2 -11.1 18.7 -19.6 42.2 -41.7 87.5 -70.4 140.3 -88.6 21.5 -7.4 39.4 -11.6 69.7 -16.3 5 -0.7 35.2 -1.3 90 -1.7 l 82.5 -0.6 0.3 -27.3 0.2 -27.2 -75.2 0.1 c -41.4 0.1 -80 0.5 -85.8 1 z",
+  "M 647.7 597.7 c -0.4 0.3 -0.7 12.7 -0.7 27.5 l 0 26.8 142.8 0 142.7 0 7.1 -9.8 c 9 -12.1 26 -32.5 35.2 -42 1.2 -1.2 2.2 -2.5 2.2 -2.7 0 -0.8 -328.6 -0.6 -329.3 0.2 z",
+  "M 1251 597.7 c -20.2 1.1 -47.2 5.5 -66.3 10.9 -52.9 14.9 -99.9 42.4 -140.7 82.5 -49.7 48.9 -84.5 116.6 -97 188.4 -5.3 30.6 -5.2 26.4 -5.7 200.3 -0.5 161.1 -0.4 167.8 2.5 163.7 0.4 -0.6 2.8 -2.7 5.4 -4.8 2.6 -2.1 5.3 -4.3 6 -5 0.7 -0.7 3.4 -2.9 6 -5 2.6 -2.1 5.3 -4.3 6 -5 0.7 -0.7 3.4 -2.9 6 -5 2.6 -2.1 5.3 -4.3 6 -5 0.8 -0.7 3.8 -3.2 6.8 -5.7 9.4 -7.7 10.3 -8.5 12.2 -10.3 1.7 -1.6 1.8 -7.3 1.8 -140.7 0 -117.9 0.2 -141.3 1.5 -153.8 2.9 -27 9.4 -54.2 18.9 -78.7 4.5 -11.4 15.7 -34.6 20.3 -41.9 9.2 -14.5 15.6 -23.6 19.1 -27.4 0.7 -0.8 2.5 -3 3.9 -5 6.4 -8.7 29.5 -31.7 39.3 -39.2 2.5 -1.9 5 -3.8 5.5 -4.3 30.2 -23.4 67.5 -40.7 105 -48.7 25 -5.3 24.9 -5.3 106.5 -5.7 42.1 -0.2 77.5 -0.6 78.8 -0.8 l 2.2 -0.5 -0.2 -26.8 -0.3 -26.7 -72 -0.1 c -39.6 0 -74.5 0.1 -77.5 0.3 z",
+  "M 1258 687.7 c -16.4 0.7 -36.1 3.8 -50.5 7.9 -14.6 4.1 -22.2 7.1 -37 14.4 -68.6 33.8 -115.7 97.3 -130 175.1 -4.8 26.1 -4.8 25.3 -5.2 156.6 -0.2 68.4 -0.1 124.3 0.4 124.3 0.9 0 2 -0.9 20.7 -16.4 7.2 -6 15.1 -12.5 17.5 -14.5 2.5 -2 5.8 -4.8 7.5 -6.2 1.7 -1.4 4.4 -3.7 6 -5 1.6 -1.3 4.3 -3.6 6 -5.1 l 3.1 -2.6 0.6 -102.9 c 0.4 -90.3 0.7 -104.1 2.2 -113.7 4.1 -26 8 -39.1 17.3 -58.1 7.5 -15.5 14.1 -27.3 16.4 -29.5 0.3 -0.3 2.4 -3 4.7 -6 4.5 -5.9 17.8 -19.1 25.8 -25.6 18.6 -15.1 42 -26.9 65 -32.8 18.8 -4.8 20.4 -4.9 98 -5.5 l 74 -0.6 0.3 -27.3 0.2 -27.2 -68.2 0.2 c -37.6 0.1 -71.2 0.3 -74.8 0.5 z",
+  "M 647.2 714.7 l 0.3 26.8 119.4 0 119.3 0 4.9 -11.5 c 2.7 -6.3 8.3 -18.4 12.4 -26.8 l 7.4 -15.2 -132 0 -131.9 0 0.2 26.7 z",
+];
+
+const WORDMARK_PATHS = [
+  "M 524 1337.5 l 0 17.5 36.5 0 36.5 0 0.2 91.2 0.3 91.3 21 0 21 0 0.3 -91.2 0.2 -91.3 36.3 -0.2 36.2 -0.3 0.3 -17.3 0.2 -17.2 -94.5 0 -94.5 0 0 17.5 z",
+  "M 784.5 1367.4 c -36.9 6.2 -63.4 31.2 -71.1 67.1 -2 9.1 -2 28.8 0 38.1 5.5 25.6 21 45.7 44.5 57.5 35 17.6 85.6 12.8 110.9 -10.6 4 -3.7 7.2 -7.2 7.2 -7.9 0 -0.7 -4.9 -6.4 -10.9 -12.7 l -10.8 -11.4 -3.4 2.8 c -9.1 7.4 -19 12.5 -28.9 14.7 -2.5 0.5 -9.5 1 -15.7 1 -13.6 0 -23.7 -2.8 -33.3 -9.2 -9.7 -6.4 -17.7 -18 -19.5 -28 l -0.7 -3.8 66.8 -0.2 66.9 -0.3 -0.1 -14 c -0.1 -15.2 -1.8 -24.4 -6.9 -35.8 -10 -22.8 -29.5 -39 -54.4 -45.3 -11.9 -3.1 -29.3 -3.9 -40.6 -2 z m 29 33.1 c 8.3 2.2 16.8 7 21.9 12.5 5.1 5.5 10.3 15.1 11.2 20.9 l 0.7 4.1 -47.3 0 -47.3 0 0.6 -3.7 c 1.7 -10.5 12.5 -24.7 22.7 -29.8 10.5 -5.3 26 -6.9 37.5 -4 z",
+  "M 1005.5 1367.5 c -14.8 2.3 -26.2 7.3 -37 16.1 -3 2.4 -5.7 4.4 -6 4.4 -0.3 0 -0.5 -4.5 -0.5 -10 l 0 -10 -19.2 0.2 -19.3 0.3 -0.3 84.8 -0.2 84.7 20.2 -0.2 20.3 -0.3 0.6 -49 c 0.4 -33.1 0.9 -50.4 1.7 -53.3 3.3 -11.9 12 -23.3 21.3 -27.9 15.1 -7.5 34.3 -7 46.5 1.3 5.4 3.6 7.9 6.6 11.3 13.1 4.8 9.4 5.1 13.5 5.1 66.6 l 0 49.7 20.3 -0.2 20.2 -0.3 0 -56 c 0 -54.8 0 -56.2 -2.2 -64.5 -7.9 -29.6 -26.9 -46.3 -57.3 -50 -10.4 -1.2 -15.2 -1.2 -25.5 0.5 z",
+  "M 1266 1345.7 c 0 22.2 -0.2 40.3 -0.5 40.3 -0.3 0 -3.1 -2 -6.2 -4.4 -24.7 -19.1 -63.5 -20.4 -92.6 -3.2 -8 4.6 -19 14.5 -24.2 21.6 -22.8 31.1 -21.5 81.6 3 111.3 21 25.4 59.7 35.9 92.5 25.1 8.4 -2.8 19.8 -9.6 25.7 -15.3 1.8 -1.7 3.4 -3.1 3.7 -3.1 0.4 0 0.6 4.5 0.6 10 l 0 10 18.8 -0.2 18.7 -0.3 0.3 -115.8 0.2 -115.7 -6.2 -0.1 c -3.5 0 -12.5 -0.1 -20 -0.2 l -13.8 -0.2 0 40.2 z m -38.8 56.4 c 23.3 4.9 38.8 25.4 38.8 51.4 0 25.4 -14.4 45 -37.5 51 -20 5.1 -42.2 -3.4 -52.9 -20.3 -7.1 -11.2 -10.2 -30.1 -7.2 -44 5.8 -27.6 31 -43.9 58.8 -38.1 z",
+  "M 1416.8 1367.5 c -31.8 5.2 -56.3 24.1 -67.8 52.4 -8 19.7 -8.2 46.2 -0.5 66.8 13.7 36.4 51.9 57.8 95 53.3 33.1 -3.4 58.2 -20 71.7 -47.1 5.3 -10.7 7.9 -21.2 8.5 -34.5 1.4 -27.1 -6.9 -49.6 -24.4 -66.7 -12.5 -12.3 -26.1 -19.4 -44.1 -23.3 -10.2 -2.1 -28.3 -2.6 -38.4 -0.9 z m 28.5 35 c 24.6 6.4 39 27.6 37.4 55 -1.7 28.8 -21.7 48.5 -49.2 48.5 -30.3 0 -52.3 -25 -50.1 -57 1 -14.8 5.5 -25.2 14.6 -34.1 12.1 -11.8 30.8 -16.7 47.3 -12.4 z",
+];
+
+export default function TendoLogo({
+  variant = "horizontal",
+  size,
+  width,
+  height,
+  color = BRAND_BLUE,
+  emblemColor,
+  wordmarkColor,
+  style,
+  className,
+}: TendoLogoProps) {
+  const activeEmblemColor = emblemColor || color;
+  const activeWordmarkColor = wordmarkColor || color;
+
+  // 1. Horizontal combo variant: Emblem icon + Wordmark typography side by side
+  if (variant === "horizontal") {
+    const emblemSize = size || height || 32;
+    const wordmarkH = emblemSize * 0.58;
+    const wordmarkW = wordmarkH * 4.28;
+
+    return (
+      <View
+        style={style}
+        className={`flex-row items-center gap-2.5 ${className || ""}`}
+      >
+        <TendoLogo variant="emblem" size={emblemSize} color={activeEmblemColor} />
+        <TendoLogo
+          variant="wordmark"
+          width={wordmarkW}
+          height={wordmarkH}
+          color={activeWordmarkColor}
+        />
+      </View>
+    );
+  }
+
+  // 2. Emblem variant (T mark icon only)
+  if (variant === "emblem") {
+    const s = size || width || height || 32;
+    return (
+      <View style={style} className={className}>
+        <Svg
+          width={s}
+          height={s}
+          viewBox="645 505 760 740"
+          fill="none"
+        >
+          <G fill={activeEmblemColor} fillRule="evenodd">
+            {EMBLEM_PATHS.map((d, index) => (
+              <Path key={`emblem-${index}`} d={d} />
+            ))}
+          </G>
+        </Svg>
+      </View>
+    );
+  }
+
+  // 3. Wordmark variant ("tendo" text only)
+  if (variant === "wordmark") {
+    const h = height || (size ? size * 0.35 : 24);
+    const w = width || h * 4.28;
+    return (
+      <View style={style} className={className}>
+        <Svg
+          width={w}
+          height={h}
+          viewBox="520 1305 1005 235"
+          fill="none"
+        >
+          <G fill={activeWordmarkColor} fillRule="evenodd">
+            {WORDMARK_PATHS.map((d, index) => (
+              <Path key={`wordmark-${index}`} d={d} />
+            ))}
+          </G>
+        </Svg>
+      </View>
+    );
+  }
+
+  // 4. Full stacked variant (Emblem on top + Wordmark below)
+  const fullSize = size || width || 64;
+  const fullHeight = height || fullSize;
+  return (
+    <View style={style} className={className}>
+      <Svg
+        width={fullSize}
+        height={fullHeight}
+        viewBox="520 500 1010 1050"
+        fill="none"
+      >
+        <G fillRule="evenodd">
+          <G fill={activeEmblemColor}>
+            {EMBLEM_PATHS.map((d, index) => (
+              <Path key={`full-emblem-${index}`} d={d} />
+            ))}
+          </G>
+          <G fill={activeWordmarkColor}>
+            {WORDMARK_PATHS.map((d, index) => (
+              <Path key={`full-wordmark-${index}`} d={d} />
+            ))}
+          </G>
+        </G>
+      </Svg>
+    </View>
+  );
+}

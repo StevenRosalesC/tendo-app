@@ -17,6 +17,7 @@ import Badge from "../../../components/ui/Badge";
 import Button from "../../../components/ui/Button";
 import Card from "../../../components/ui/Card";
 import Input from "../../../components/ui/Input";
+import TendoLogo from "../../../components/ui/TendoLogo";
 import TeamManagementTab from "../../../components/settings/TeamManagementTab";
 import { useCurrentUser } from "../../../hooks/useCurrentUser";
 import { usePosSocket } from "../../../hooks/usePosSocket";
@@ -436,7 +437,7 @@ export default function SettingsScreen() {
       {/* Block 3: Terminal Hardware & Connection Status */}
       <Card variant="low" className="gap-4">
         <View className="flex-row items-center gap-2.5 pb-3 border-b border-surface-container-high/40">
-          <MaterialIcons name="point-of-sale" size={20} color="#c7c4d7" />
+          <TendoLogo variant="emblem" size={20} color="#017AF6" />
           <Text className="text-base font-bold text-on-surface">
             Estado de Terminal POS
           </Text>
@@ -477,6 +478,14 @@ export default function SettingsScreen() {
               leftIcon={<MaterialIcons name="logout" size={18} color="#FFDAD6" />}
               onPress={confirmSignOut}
             />
+          </View>
+
+          {/* Branding Footer */}
+          <View className="items-center justify-center pt-8 pb-4 gap-1.5 opacity-60">
+            <TendoLogo variant="horizontal" size={20} wordmarkColor="#908fa0" />
+            <Text className="text-[11px] text-outline-variant font-medium">
+              Tendo POS Platform • Versión 1.0.0
+            </Text>
           </View>
         </>
       )}
