@@ -35,7 +35,7 @@ export default function CartItemRow({
   const unitSuffix = item.unit ? UNIT_SHORT[item.unit] || "u" : "u";
 
   return (
-    <View className="p-3 rounded-2xl bg-surface-container/70 border border-surface-container-high/60 flex-col gap-2 hover:bg-surface-bright transition-colors shadow-xs">
+    <View className="p-3 rounded-2xl bg-surface-container/70 border border-surface-container-high/60 flex-col gap-2">
       {/* Top Row: Thumbnail, Product Title, Unit Price, and Remove */}
       <View className="flex-row items-center justify-between gap-2.5">
         <View className="flex-row items-center gap-2.5 flex-1 min-w-0">
@@ -86,7 +86,7 @@ export default function CartItemRow({
           onPress={() => onRemove(item.id)}
           activeOpacity={0.7}
           accessibilityLabel="Eliminar producto"
-          className="w-7 h-7 rounded-lg items-center justify-center hover:bg-error-container/20 active:scale-95"
+          className="w-7 h-7 rounded-lg items-center justify-center"
         >
           <MaterialIcons name="close" size={16} color="#908fa0" />
         </TouchableOpacity>
@@ -100,7 +100,7 @@ export default function CartItemRow({
             onPress={() => onDecrement(item.id)}
             activeOpacity={0.7}
             accessibilityLabel="Disminuir cantidad"
-            className="w-7 h-7 rounded-lg items-center justify-center bg-surface-container hover:bg-surface-container-lowest active:scale-95"
+            className="w-7 h-7 rounded-lg items-center justify-center bg-surface-container"
           >
             <MaterialIcons
               name={item.quantity <= 1 ? "delete-outline" : "remove"}
@@ -113,7 +113,7 @@ export default function CartItemRow({
             onPress={() => onEditQuantity?.(item)}
             activeOpacity={0.7}
             accessibilityLabel="Modificar cantidad directamente"
-            className="px-2 min-w-[32px] items-center justify-center rounded hover:bg-surface-container active:bg-surface-container-highest"
+            className="px-2 min-w-[32px] items-center justify-center rounded"
           >
             <Text className="text-xs font-bold font-mono text-on-surface">
               {item.quantity} {unitSuffix}
@@ -128,7 +128,7 @@ export default function CartItemRow({
             className={`w-7 h-7 rounded-lg items-center justify-center ${
               isMaxStock
                 ? "bg-surface-container opacity-40"
-                : "bg-surface-container hover:bg-surface-container-lowest active:scale-95"
+                : "bg-surface-container"
             }`}
           >
             <MaterialIcons name="add" size={14} color="#c7c4d7" />

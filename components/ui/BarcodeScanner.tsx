@@ -192,7 +192,7 @@ export default function BarcodeScanner({
             }`}
           />
           <Text
-            className={`text-xs font-semibold px-3 py-1 rounded-full mt-3 shadow-sm ${
+            className={`text-xs font-semibold px-3 py-1 rounded-full mt-3 ${
               isSuccess
                 ? "bg-secondary text-on-secondary font-bold"
                 : "bg-black/75 text-white"

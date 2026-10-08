@@ -208,10 +208,11 @@ export default function TerminalCart({
             onPress={handleBarcodeSubmit}
             disabled={!barcodeInput.trim() || isSearchingBarcode}
             activeOpacity={0.7}
+            style={{ opacity: barcodeInput.trim() && !isSearchingBarcode ? 1 : 0.5 }}
             className={`h-10 px-3.5 rounded-xl flex-row items-center gap-1.5 ${
               barcodeInput.trim() && !isSearchingBarcode
-                ? "bg-primary active:scale-95"
-                : "bg-surface-container-high opacity-50"
+                ? "bg-primary"
+                : "bg-surface-container-high"
             }`}
           >
             {isSearchingBarcode ? (
@@ -251,7 +252,8 @@ export default function TerminalCart({
                 {!isDesktop && (
                   <TouchableOpacity
                     onPress={() => setIsSelectModalOpen(true)}
-                    className="px-4 py-2 rounded-xl bg-surface-container-high border border-surface-container-highest/60 flex-row items-center gap-1.5 active:scale-95 hover:bg-surface-bright"
+                    activeOpacity={0.7}
+                    className="px-4 py-2 rounded-xl bg-surface-container-high border border-surface-container-highest/60 flex-row items-center gap-1.5"
                   >
                     <MaterialIcons
                       name="search"
@@ -266,7 +268,8 @@ export default function TerminalCart({
 
                 <TouchableOpacity
                   onPress={() => setIsScannerOpen(true)}
-                  className="px-4 py-2 rounded-xl bg-primary-container flex-row items-center gap-1.5 active:scale-95"
+                  activeOpacity={0.7}
+                  className="px-4 py-2 rounded-xl bg-primary-container flex-row items-center gap-1.5"
                 >
                   <MaterialIcons
                     name="qr-code-scanner"

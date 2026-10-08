@@ -21,7 +21,7 @@ export default function TerminalShortcutsBar() {
     <View className="hidden lg:flex py-2 px-4 rounded-2xl bg-surface-container-low border border-surface-container-high/60 flex-row items-center justify-between shadow-xs">
       {/* Station Status */}
       <View className="flex-row items-center gap-2">
-        <View className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+        <View className="w-2 h-2 rounded-full bg-emerald-400" />
         <MaterialIcons name="point-of-sale" size={16} color="#c0c1ff" />
         <Text className="text-xs font-semibold text-on-surface">
           Mostrador POS

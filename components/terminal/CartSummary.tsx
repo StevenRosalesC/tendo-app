@@ -132,7 +132,7 @@ export default function CartSummary({
                       className={`px-2.5 py-1 rounded-lg border text-xs ${
                         isSelected
                           ? "bg-primary border-primary"
-                          : "bg-surface-container border-surface-container-highest/60 hover:bg-surface-bright"
+                          : "bg-surface-container border-surface-container-highest/60"
                       }`}
                     >
                       <Text
@@ -167,7 +167,7 @@ export default function CartSummary({
                 </View>
                 <TouchableOpacity
                   onPress={handleApplyCustom}
-                  className="px-2.5 h-7 rounded-lg bg-surface-container-high border border-surface-container-highest/60 items-center justify-center hover:bg-surface-container"
+                  className="px-2.5 h-7 rounded-lg bg-surface-container-high border border-surface-container-highest/60 items-center justify-center"
                 >
                   <Text className="text-[11px] font-bold text-primary">
                     Aplicar
@@ -203,10 +203,9 @@ export default function CartSummary({
         onPress={onCheckout}
         disabled={!hasItems || isLoading}
         activeOpacity={0.85}
-        className={`w-full py-3.5 px-5 rounded-2xl flex-row items-center justify-between shadow-lg transition-all ${
-          hasItems && !isLoading
-            ? "bg-primary active:scale-[0.99] hover:brightness-105"
-            : "bg-surface-container-highest opacity-40"
+        style={{ opacity: hasItems && !isLoading ? 1 : 0.4 }}
+        className={`w-full py-3.5 px-5 rounded-2xl flex-row items-center justify-between ${
+          hasItems && !isLoading ? "bg-primary" : "bg-surface-container-highest"
         }`}
       >
         <View className="flex-row items-center gap-2">
@@ -247,9 +246,8 @@ export default function CartSummary({
             onPress={onHold}
             disabled={!hasItems}
             activeOpacity={0.7}
-            className={`flex-1 py-2.5 px-3 rounded-xl border border-surface-container-highest/60 bg-surface-container-high flex-row items-center justify-center gap-1.5 ${
-              !hasItems ? "opacity-40" : "hover:bg-surface-bright active:scale-95"
-            }`}
+            style={{ opacity: !hasItems ? 0.4 : 1 }}
+            className="flex-1 py-2.5 px-3 rounded-xl border border-surface-container-highest/60 bg-surface-container-high flex-row items-center justify-center gap-1.5"
           >
             <MaterialIcons name="pause" size={16} color="#c7c4d7" />
             <Text className="text-xs font-semibold text-on-surface">
@@ -262,9 +260,8 @@ export default function CartSummary({
           onPress={onClear}
           disabled={!hasItems}
           activeOpacity={0.7}
-          className={`flex-1 py-2.5 px-3 rounded-xl border border-surface-container-highest/60 bg-surface-container-high flex-row items-center justify-center gap-1.5 ${
-            !hasItems ? "opacity-40" : "hover:bg-error-container/20 active:scale-95"
-          }`}
+          style={{ opacity: !hasItems ? 0.4 : 1 }}
+          className="flex-1 py-2.5 px-3 rounded-xl border border-surface-container-highest/60 bg-surface-container-high flex-row items-center justify-center gap-1.5"
         >
           <MaterialIcons name="delete-sweep" size={16} color="#ffb4ab" />
           <Text className="text-xs font-semibold text-error">

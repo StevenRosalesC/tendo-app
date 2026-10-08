@@ -194,11 +194,12 @@ export default function TerminalProductGrid({ onItemAdded }: TerminalProductGrid
             <View className="flex-row items-center bg-surface-container border border-surface-container-high rounded-xl p-0.5">
               <TouchableOpacity
                 onPress={() => setViewMode("grid")}
+                activeOpacity={0.7}
                 accessibilityLabel="Vista en cuadrícula"
                 className={`p-1.5 rounded-lg ${
                   viewMode === "grid"
                     ? "bg-primary text-on-primary"
-                    : "hover:bg-surface-container-high"
+                    : ""
                 }`}
               >
                 <MaterialIcons
@@ -209,11 +210,12 @@ export default function TerminalProductGrid({ onItemAdded }: TerminalProductGrid
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => setViewMode("list")}
+                activeOpacity={0.7}
                 accessibilityLabel="Vista en lista"
                 className={`p-1.5 rounded-lg ${
                   viewMode === "list"
                     ? "bg-primary text-on-primary"
-                    : "hover:bg-surface-container-high"
+                    : ""
                 }`}
               >
                 <MaterialIcons
@@ -227,7 +229,8 @@ export default function TerminalProductGrid({ onItemAdded }: TerminalProductGrid
             <TouchableOpacity
               onPress={() => refetch()}
               disabled={isRefetching}
-              className="w-8 h-8 rounded-xl bg-surface-container-high border border-surface-container-highest/60 items-center justify-center hover:bg-surface-bright active:scale-95"
+              activeOpacity={0.7}
+              className="w-8 h-8 rounded-xl bg-surface-container-high border border-surface-container-highest/60 items-center justify-center"
               accessibilityLabel="Refrescar catálogo"
             >
               {isRefetching ? (
@@ -275,10 +278,10 @@ export default function TerminalProductGrid({ onItemAdded }: TerminalProductGrid
           <View className="flex-row items-center gap-1.5 self-start sm:self-auto">
             <TouchableOpacity
               onPress={() => setFilterType("all")}
-              className={`px-3 py-1.5 rounded-xl border text-xs transition-colors ${
+              className={`px-3 py-1.5 rounded-xl border text-xs ${
                 filterType === "all"
                   ? "bg-primary border-primary"
-                  : "bg-surface-container border-surface-container-high hover:bg-surface-container-high"
+                  : "bg-surface-container border-surface-container-high"
               }`}
             >
               <Text
@@ -292,10 +295,10 @@ export default function TerminalProductGrid({ onItemAdded }: TerminalProductGrid
 
             <TouchableOpacity
               onPress={() => setFilterType("inStock")}
-              className={`px-3 py-1.5 rounded-xl border text-xs transition-colors ${
+              className={`px-3 py-1.5 rounded-xl border text-xs ${
                 filterType === "inStock"
                   ? "bg-primary border-primary"
-                  : "bg-surface-container border-surface-container-high hover:bg-surface-container-high"
+                  : "bg-surface-container border-surface-container-high"
               }`}
             >
               <Text
@@ -309,10 +312,10 @@ export default function TerminalProductGrid({ onItemAdded }: TerminalProductGrid
 
             <TouchableOpacity
               onPress={() => setFilterType("unlimited")}
-              className={`px-3 py-1.5 rounded-xl border text-xs transition-colors ${
+              className={`px-3 py-1.5 rounded-xl border text-xs ${
                 filterType === "unlimited"
                   ? "bg-primary border-primary"
-                  : "bg-surface-container border-surface-container-high hover:bg-surface-container-high"
+                  : "bg-surface-container border-surface-container-high"
               }`}
             >
               <Text
@@ -335,10 +338,11 @@ export default function TerminalProductGrid({ onItemAdded }: TerminalProductGrid
           >
             <TouchableOpacity
               onPress={() => setSelectedCategory("all")}
+              activeOpacity={0.7}
               className={`px-2.5 py-1 rounded-lg border text-xs ${
                 selectedCategory === "all"
                   ? "bg-secondary-container border-secondary-container"
-                  : "bg-surface-container border-surface-container-high hover:bg-surface-container-high"
+                  : "bg-surface-container border-surface-container-high"
               }`}
             >
               <Text
@@ -356,10 +360,11 @@ export default function TerminalProductGrid({ onItemAdded }: TerminalProductGrid
               <TouchableOpacity
                 key={cat}
                 onPress={() => setSelectedCategory(cat)}
+                activeOpacity={0.7}
                 className={`px-2.5 py-1 rounded-lg border text-xs ${
                   selectedCategory === cat
                     ? "bg-secondary-container border-secondary-container"
-                    : "bg-surface-container border-surface-container-high hover:bg-surface-container-high"
+                    : "bg-surface-container border-surface-container-high"
                 }`}
               >
                 <Text
@@ -458,14 +463,14 @@ export default function TerminalProductGrid({ onItemAdded }: TerminalProductGrid
                       onPress={() => handleProductPress(product)}
                       disabled={isOutOfStock}
                       activeOpacity={0.75}
-                      className={`rounded-2xl p-3 flex-col justify-between border shadow-xs min-h-[148px] relative transition-all ${
+                      className={`rounded-2xl p-3 flex-col justify-between border min-h-[148px] relative ${
                         isJustAdded
-                          ? "bg-primary/25 border-primary scale-[1.02]"
+                          ? "bg-primary/25 border-primary"
                           : isOutOfStock
                           ? "bg-surface-container/30 border-surface-container-high/40 opacity-55"
                           : quantityInCart > 0
-                          ? "bg-surface-container border-primary/60 shadow-sm"
-                          : "bg-surface-container border-surface-container-high/70 hover:border-surface-container-highest hover:bg-surface-bright"
+                          ? "bg-surface-container border-primary/60"
+                          : "bg-surface-container border-surface-container-high/70"
                       }`}
                     >
                       {/* Top Row: Thumbnail/Icon & In-Cart Badge */}
@@ -571,14 +576,14 @@ export default function TerminalProductGrid({ onItemAdded }: TerminalProductGrid
                   onPress={() => handleProductPress(product)}
                   disabled={isOutOfStock}
                   activeOpacity={0.75}
-                  className={`p-3 rounded-2xl border flex-row items-center justify-between gap-3 transition-all ${
+                  className={`p-3 rounded-2xl border flex-row items-center justify-between gap-3 ${
                     isJustAdded
                       ? "bg-primary/20 border-primary"
                       : isOutOfStock
                       ? "bg-surface-container/30 border-surface-container-high/40 opacity-55"
                       : quantityInCart > 0
                       ? "bg-surface-container border-primary/50"
-                      : "bg-surface-container border-surface-container-high/60 hover:bg-surface-bright"
+                      : "bg-surface-container border-surface-container-high/60"
                   }`}
                 >
                   {/* Thumbnail & Product Details */}

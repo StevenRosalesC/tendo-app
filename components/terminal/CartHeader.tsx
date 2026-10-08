@@ -53,7 +53,7 @@ export default function CartHeader({
             <TouchableOpacity
               onPress={onOpenManualSelect}
               activeOpacity={0.7}
-              className="h-8 px-2.5 rounded-lg bg-surface-container-high border border-surface-container-highest/60 flex-row items-center gap-1.5 hover:bg-surface-bright"
+              className="h-8 px-2.5 rounded-lg bg-surface-container-high border border-surface-container-highest/60 flex-row items-center gap-1.5"
             >
               <MaterialIcons name="search" size={16} color="#c0c1ff" />
               <Text className="text-xs font-semibold text-primary">
@@ -66,7 +66,7 @@ export default function CartHeader({
             <TouchableOpacity
               onPress={onOpenScanner}
               activeOpacity={0.7}
-              className="h-8 px-2.5 rounded-lg bg-surface-container-high border border-surface-container-highest/60 flex-row items-center gap-1 hover:bg-surface-bright"
+              className="h-8 px-2.5 rounded-lg bg-surface-container-high border border-surface-container-highest/60 flex-row items-center gap-1"
             >
               <MaterialIcons name="qr-code-scanner" size={16} color="#c0c1ff" />
               <Text className="text-xs font-semibold text-primary hidden sm:inline">

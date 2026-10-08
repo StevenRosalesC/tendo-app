@@ -269,7 +269,8 @@ export default function CheckoutModal({
               </Text>
               <TouchableOpacity
                 onPress={() => setAmountReceived(totals.total.toFixed(2))}
-                className="px-2.5 py-1 rounded-lg bg-surface-container-high border border-surface-container-highest/60 hover:bg-surface-container"
+                activeOpacity={0.7}
+                className="px-2.5 py-1 rounded-lg bg-surface-container-high border border-surface-container-highest/60"
               >
                 <Text className="text-[11px] font-semibold text-primary">
                   Monto Exacto
@@ -300,7 +301,8 @@ export default function CheckoutModal({
                 <TouchableOpacity
                   key={bill}
                   onPress={() => setAmountReceived(bill.toString())}
-                  className="px-3 py-1.5 rounded-xl bg-surface-container border border-surface-container-high hover:bg-surface-container-highest"
+                  activeOpacity={0.7}
+                  className="px-3 py-1.5 rounded-xl bg-surface-container border border-surface-container-high"
                 >
                   <Text className="text-xs font-mono font-semibold text-on-surface">
                     ${bill}

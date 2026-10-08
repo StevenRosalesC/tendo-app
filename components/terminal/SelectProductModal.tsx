@@ -222,7 +222,7 @@ export default function SelectProductModal({
                 return (
                   <View
                     key={product.id}
-                    className="p-3 rounded-2xl bg-surface-container border border-surface-container-high/60 flex-row items-center justify-between gap-3 hover:bg-surface-bright"
+                    className="p-3 rounded-2xl bg-surface-container border border-surface-container-high/60 flex-row items-center justify-between gap-3"
                   >
                     {/* Product Info & Thumbnail */}
                     <View className="flex-row items-center gap-3 flex-1 min-w-0">
@@ -328,12 +328,13 @@ export default function SelectProductModal({
                         onPress={() => handleAddProduct(product)}
                         disabled={isOutOfStock}
                         activeOpacity={0.7}
-                        className={`px-3 py-1.5 rounded-xl flex-row items-center gap-1.5 active:scale-95 ${
+                        style={{ opacity: isOutOfStock ? 0.4 : 1 }}
+                        className={`px-3 py-1.5 rounded-xl flex-row items-center gap-1.5 ${
                           isJustAdded
                             ? "bg-secondary"
                             : isOutOfStock
-                              ? "bg-surface-container-highest opacity-40"
-                              : "bg-primary-container hover:bg-primary-container/80"
+                              ? "bg-surface-container-highest"
+                              : "bg-primary-container"
                         }`}
                       >
                         <MaterialIcons

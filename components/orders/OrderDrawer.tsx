@@ -135,7 +135,7 @@ export default function OrderDrawer({ onCheckoutSuccess }: OrderDrawerProps) {
         onPress={() => setIsSelectModalOpen(true)}
         activeOpacity={0.7}
         accessibilityLabel="Buscar productos manualmente"
-        className="h-8 px-2.5 rounded-lg bg-surface-container-high border border-surface-container-highest/60 flex-row items-center gap-1 hover:bg-surface-bright"
+        className="h-8 px-2.5 rounded-lg bg-surface-container-high border border-surface-container-highest/60 flex-row items-center gap-1"
       >
         <MaterialIcons name="search" size={16} color="#c0c1ff" />
         <Text className="text-xs font-semibold text-primary">
@@ -147,7 +147,7 @@ export default function OrderDrawer({ onCheckoutSuccess }: OrderDrawerProps) {
         onPress={() => setIsScannerOpen(true)}
         activeOpacity={0.7}
         accessibilityLabel="Escanear código de barras"
-        className="h-8 px-2.5 rounded-lg bg-surface-container-high border border-surface-container-highest/60 flex-row items-center gap-1 hover:bg-surface-bright"
+        className="h-8 px-2.5 rounded-lg bg-surface-container-high border border-surface-container-highest/60 flex-row items-center gap-1"
       >
         <MaterialIcons name="qr-code-scanner" size={16} color="#c0c1ff" />
         <Text className="text-xs font-semibold text-primary hidden sm:inline">
@@ -241,7 +241,7 @@ export default function OrderDrawer({ onCheckoutSuccess }: OrderDrawerProps) {
                       className={`px-2 py-0.5 rounded-md border text-xs ${
                         isSelected
                           ? "bg-primary border-primary"
-                          : "bg-surface-container-high border-surface-container-highest/60 hover:bg-surface-bright"
+                          : "bg-surface-container-high border-surface-container-highest/60"
                       }`}
                     >
                       <Text
@@ -285,9 +285,9 @@ export default function OrderDrawer({ onCheckoutSuccess }: OrderDrawerProps) {
         onPress={handleOpenCheckout}
         disabled={items.length === 0}
         activeOpacity={0.85}
-        className={`w-full py-3 px-4 rounded-xl flex-row items-center justify-between shadow-md ${
+        className={`w-full py-3 px-4 rounded-xl flex-row items-center justify-between ${
           items.length > 0
-            ? "bg-primary active:scale-[0.99]"
+            ? "bg-primary"
             : "bg-surface-container-highest opacity-40"
         }`}
       >
@@ -321,7 +321,7 @@ export default function OrderDrawer({ onCheckoutSuccess }: OrderDrawerProps) {
           <TouchableOpacity
             onPress={handleGoToTerminal}
             activeOpacity={0.7}
-            className="flex-1 py-2 px-3 rounded-xl border border-surface-container-highest/60 bg-surface-container-high flex-row items-center justify-center gap-1.5 hover:bg-surface-bright"
+            className="flex-1 py-2 px-3 rounded-xl border border-surface-container-highest/60 bg-surface-container-high flex-row items-center justify-center gap-1.5"
           >
             <MaterialIcons name="point-of-sale" size={15} color="#c0c1ff" />
             <Text className="text-xs font-semibold text-primary">
@@ -335,7 +335,7 @@ export default function OrderDrawer({ onCheckoutSuccess }: OrderDrawerProps) {
           disabled={items.length === 0}
           activeOpacity={0.7}
           className={`flex-1 py-2 px-3 rounded-xl border border-surface-container-highest/60 bg-surface-container-high flex-row items-center justify-center gap-1.5 ${
-            items.length === 0 ? "opacity-40" : "hover:bg-error-container/20"
+            items.length === 0 ? "opacity-40" : ""
           }`}
         >
           <MaterialIcons name="delete-sweep" size={15} color="#ffb4ab" />
@@ -403,7 +403,8 @@ export default function OrderDrawer({ onCheckoutSuccess }: OrderDrawerProps) {
               <View className="flex-row items-center gap-2 mt-2 flex-wrap justify-center">
                 <TouchableOpacity
                   onPress={() => setIsSelectModalOpen(true)}
-                  className="px-3.5 py-2 rounded-xl bg-surface-container-high border border-surface-container-highest/60 flex-row items-center gap-1.5 active:scale-95 hover:bg-surface-bright"
+                  activeOpacity={0.7}
+                  className="px-3.5 py-2 rounded-xl bg-surface-container-high border border-surface-container-highest/60 flex-row items-center gap-1.5"
                 >
                   <MaterialIcons name="search" size={15} color="#c0c1ff" />
                   <Text className="text-xs font-bold text-primary">
@@ -413,7 +414,8 @@ export default function OrderDrawer({ onCheckoutSuccess }: OrderDrawerProps) {
 
                 <TouchableOpacity
                   onPress={() => setIsScannerOpen(true)}
-                  className="px-3.5 py-2 rounded-xl bg-primary-container flex-row items-center gap-1.5 active:scale-95"
+                  activeOpacity={0.7}
+                  className="px-3.5 py-2 rounded-xl bg-primary-container flex-row items-center gap-1.5"
                 >
                   <MaterialIcons name="qr-code-scanner" size={15} color="#0d0096" />
                   <Text className="text-xs font-bold text-on-primary-container">
@@ -424,7 +426,8 @@ export default function OrderDrawer({ onCheckoutSuccess }: OrderDrawerProps) {
                 {!isOnTerminal && (
                   <TouchableOpacity
                     onPress={handleGoToTerminal}
-                    className="px-3.5 py-2 rounded-xl bg-surface-container-high border border-surface-container-highest/60 flex-row items-center gap-1.5 active:scale-95"
+                    activeOpacity={0.7}
+                    className="px-3.5 py-2 rounded-xl bg-surface-container-high border border-surface-container-highest/60 flex-row items-center gap-1.5"
                   >
                     <MaterialIcons name="point-of-sale" size={15} color="#c0c1ff" />
                     <Text className="text-xs font-bold text-primary">
@@ -514,7 +517,7 @@ export default function OrderDrawer({ onCheckoutSuccess }: OrderDrawerProps) {
                       <TouchableOpacity
                         onPress={() => removeItem(item.id)}
                         activeOpacity={0.7}
-                        className="w-7 h-7 rounded-lg items-center justify-center hover:bg-error-container/20"
+                        className="w-7 h-7 rounded-lg items-center justify-center"
                       >
                         <MaterialIcons name="close" size={16} color="#908fa0" />
                       </TouchableOpacity>
@@ -540,7 +543,7 @@ export default function OrderDrawer({ onCheckoutSuccess }: OrderDrawerProps) {
                           onPress={() => setEditingQuantityItem(item)}
                           activeOpacity={0.7}
                           accessibilityLabel="Modificar cantidad"
-                          className="px-1.5 min-w-[28px] items-center justify-center rounded hover:bg-surface-container active:bg-surface-container-highest"
+                          className="px-1.5 min-w-[28px] items-center justify-center rounded"
                         >
                           <Text className="text-[11px] font-bold font-mono text-on-surface">
                             {item.quantity} {unitShort}
