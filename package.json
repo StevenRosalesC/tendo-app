@@ -1,6 +1,7 @@
 {
   "name": "tendo-app",
   "version": "1.0.0",
+  "description": "Modern cross-platform POS (Point of Sale) and inventory management application built with Expo, React Native, TypeScript, and Tailwind CSS.",
   "main": "expo-router/entry",
   "dependencies": {
     "@clerk/expo": "^4.8.0",
