@@ -368,6 +368,8 @@ export default function InventoryScreen() {
       className="flex-1 bg-surface"
       contentContainerClassName="p-3 sm:p-4 lg:p-6 pb-28 sm:pb-12 gap-3.5 sm:gap-6 max-w-[1720px] mx-auto w-full"
       showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
       refreshControl={
         <RefreshControl
           refreshing={isRefetching}

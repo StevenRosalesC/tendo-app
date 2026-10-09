@@ -11,6 +11,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
+import { useKeyboard } from "../../hooks/useKeyboard";
 
 export interface ModalProps {
   visible: boolean;
@@ -32,6 +33,7 @@ export default function Modal({
   maxWidth = "md",
 }: ModalProps) {
   const { height: screenHeight } = useWindowDimensions();
+  const { isKeyboardVisible, keyboardHeight } = useKeyboard();
 
   if (!visible) return null;
 
@@ -43,9 +45,13 @@ export default function Modal({
   };
 
   const maxWidthPx = maxWidthMap[maxWidth] || 520;
-  // Ensure modal height leaves comfortable breathing room on all screens and keyboards
-  const maxModalHeight = Math.min(Math.round(screenHeight * 0.88), 740);
-  const maxBodyHeight = maxModalHeight - 85;
+  
+  // Calculate available height accounting dynamically for active virtual keyboard
+  const availableHeight = isKeyboardVisible
+    ? Math.max(screenHeight - keyboardHeight - (Platform.OS === "ios" ? 40 : 60), 260)
+    : Math.round(screenHeight * 0.88);
+  const maxModalHeight = Math.min(availableHeight, 740);
+  const maxBodyHeight = Math.max(maxModalHeight - 85, 140);
 
   return (
     <RNModal
@@ -59,7 +65,11 @@ export default function Modal({
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         className="flex-1"
       >
-        <View className="flex-1 justify-center items-center p-4">
+        <View
+          className={`flex-1 items-center px-4 ${
+            isKeyboardVisible ? "justify-start pt-6 sm:pt-10" : "justify-center py-4"
+          }`}
+        >
           {/* Backdrop Tap Target */}
           <TouchableOpacity
             activeOpacity={1}
@@ -110,8 +120,9 @@ export default function Modal({
             <ScrollView
               style={{ maxHeight: maxBodyHeight, flexGrow: 0 }}
               contentContainerClassName="p-5 sm:p-6"
-              showsVerticalScrollIndicator={false}
+              showsVerticalScrollIndicator={true}
               keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="on-drag"
               bounces={false}
             >
               {children}

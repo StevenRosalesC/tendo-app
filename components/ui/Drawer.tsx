@@ -13,6 +13,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
+import { useKeyboard } from "../../hooks/useKeyboard";
 
 export interface DrawerProps {
   /**
@@ -71,7 +72,9 @@ export default function Drawer({
   width,
 }: DrawerProps) {
   const { width: windowWidth } = useWindowDimensions();
+  const { isKeyboardVisible, keyboardHeight } = useKeyboard();
   const drawerWidth = width || Math.min(Math.round(windowWidth * 0.9), 440);
+  const bottomOffset = Platform.OS === "android" && isKeyboardVisible ? keyboardHeight : 0;
 
   const [shouldRender, setShouldRender] = useState(visible);
 
@@ -172,14 +175,14 @@ export default function Drawer({
               {
                 position: "absolute",
                 top: 0,
-                bottom: 0,
+                bottom: bottomOffset,
                 width: drawerWidth,
                 transform: [{ translateX: slideAnim }],
                 zIndex: 100,
               },
               side === "left" ? { left: 0 } : { right: 0 },
             ]}
-            className={`h-full bg-surface-container-low shadow-2xl flex-col ${
+            className={`bg-surface-container-low shadow-2xl flex-col ${
               side === "left"
                 ? "border-r border-surface-container-high/70"
                 : "border-l border-surface-container-high/70"
@@ -231,8 +234,9 @@ export default function Drawer({
             <ScrollView
               className="flex-1"
               contentContainerClassName="p-4 sm:p-5"
-              showsVerticalScrollIndicator={false}
+              showsVerticalScrollIndicator={true}
               keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="on-drag"
             >
               {children}
             </ScrollView>

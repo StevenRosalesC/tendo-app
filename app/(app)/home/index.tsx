@@ -146,6 +146,8 @@ export default function HomeScreen() {
       className="flex-1 bg-surface"
       contentContainerClassName="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto w-full gap-5 pb-28"
       showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
       refreshControl={
         <RefreshControl
           refreshing={isRefetchingSales}

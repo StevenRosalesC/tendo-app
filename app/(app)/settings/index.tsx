@@ -195,6 +195,8 @@ export default function SettingsScreen() {
       className="flex-1 bg-surface"
       contentContainerClassName="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto w-full gap-6 pb-24"
       showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
     >
       {/* Header section */}
       <View className="flex-row items-center justify-between flex-wrap gap-3 pb-2 border-b border-surface-container-high/40">

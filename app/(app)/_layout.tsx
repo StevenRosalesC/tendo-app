@@ -2,7 +2,7 @@ import { useAuth, useUser } from "@clerk/expo";
 import { Redirect, Slot, usePathname, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, KeyboardAvoidingView, Platform, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import DesktopHeader from "../../components/layout/DesktopHeader";
 import DesktopSidebar from "../../components/layout/DesktopSidebar";
@@ -10,6 +10,7 @@ import MobileHeader from "../../components/layout/MobileHeader";
 import Navigation from "../../components/Navigation";
 import OrderDrawer from "../../components/orders/OrderDrawer";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
+import { useKeyboard } from "../../hooks/useKeyboard";
 import { usePosSocket } from "../../hooks/usePosSocket";
 import { usePushNotifications } from "../../hooks/usePushNotifications";
 
@@ -20,6 +21,7 @@ export default function AppLayout() {
   const { user } = useUser();
   const { user: userProfile } = useCurrentUser();
   const { isConnected: isWsConnected } = usePosSocket();
+  const { isKeyboardVisible, keyboardHeight } = useKeyboard();
 
   // Initialize push notifications lifecycle and listeners
   usePushNotifications();
@@ -100,14 +102,24 @@ export default function AppLayout() {
           />
 
           {/* 3. Active Screen Content */}
-          <View className="flex-1 min-w-0">
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
+            className="flex-1 min-w-0"
+            style={
+              Platform.OS === "android" && isKeyboardVisible
+                ? { paddingBottom: keyboardHeight }
+                : undefined
+            }
+          >
             <Slot />
-          </View>
+          </KeyboardAvoidingView>
 
-          {/* 4. Mobile Bottom Navigation */}
-          <View className="flex md:hidden">
-            <Navigation />
-          </View>
+          {/* 4. Mobile Bottom Navigation (Hidden when keyboard is open to maximize workspace) */}
+          {!isKeyboardVisible && (
+            <View className="flex md:hidden">
+              <Navigation />
+            </View>
+          )}
         </View>
       </View>
 

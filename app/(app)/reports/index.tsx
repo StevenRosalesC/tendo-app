@@ -212,6 +212,8 @@ export default function ReportsScreen() {
       className="flex-1 bg-surface"
       contentContainerClassName="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto w-full gap-6 pb-28"
       showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
       refreshControl={
         <RefreshControl
           refreshing={isRefetching}
