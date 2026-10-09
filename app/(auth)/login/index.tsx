@@ -7,6 +7,7 @@ import {
   Alert,
   Image,
   ImageBackground,
+  KeyboardAvoidingView,
   Platform,
   ScrollView,
   Text,
@@ -23,12 +24,15 @@ import AuthFooter from "../../../components/auth/AuthFooter";
 import AuthHeader from "../../../components/auth/AuthHeader";
 import AuthFeatureShowcase from "../../../components/auth/AuthFeatureShowcase";
 import SocialAuthButton from "../../../components/auth/SocialAuthButton";
+import { useKeyboard } from "../../../hooks/useKeyboard";
 
 export default function LoginPage() {
   const router = useRouter();
   const { signIn, errors, fetchStatus } = useSignIn();
   const { startSSOFlow } = useSSO();
   const clerk = useClerk();
+
+  const { isKeyboardVisible, keyboardHeight } = useKeyboard();
 
   // Local state
   const [email, setEmail] = useState<string>("");
@@ -345,20 +349,30 @@ export default function LoginPage() {
         resizeMode="cover"
         className="flex-1"
       >
-        <View className="flex-1 bg-surface-base/85">
-          <ScrollView
-            contentContainerClassName="flex-grow justify-between"
-            showsVerticalScrollIndicator={false}
-          >
-        {/* Top Header */}
-        <AuthHeader
-          badgeLabel="Encrypted Node"
-          badgeDotColor="bg-primary"
-          badgeIcon="lock"
-        />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          className="flex-1"
+        >
+          <View className="flex-1 bg-surface-base/85">
+            <ScrollView
+              contentContainerStyle={{
+                flexGrow: 1,
+                justifyContent: "space-between",
+                paddingBottom: Platform.OS === "ios" ? 40 : (isKeyboardVisible ? keyboardHeight + 60 : 40),
+              }}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="on-drag"
+            >
+              {/* Top Header */}
+              <AuthHeader
+                badgeLabel="Encrypted Node"
+                badgeDotColor="bg-primary"
+                badgeIcon="lock"
+              />
 
-        {/* Main Content (Responsive 2 Columns on desktop, stacked on mobile) */}
-        <View className="w-full max-w-7xl mx-auto px-6 py-8 flex-1 justify-center">
+              {/* Main Content (Responsive 2 Columns on desktop, stacked on mobile) */}
+              <View className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 justify-center items-center lg:items-stretch">
           <View className="flex-col lg:flex-row gap-10 items-center justify-between">
             {/* Left Column: Value Showcase & Enterprise Telemetry */}
             <AuthFeatureShowcase
@@ -617,7 +631,8 @@ export default function LoginPage() {
         <AuthFooter />
           </ScrollView>
         </View>
-      </ImageBackground>
+      </KeyboardAvoidingView>
+    </ImageBackground>
     </SafeAreaView>
   );
 }

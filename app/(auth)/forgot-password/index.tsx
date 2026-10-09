@@ -4,6 +4,7 @@ import { Link, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ImageBackground,
+  KeyboardAvoidingView,
   Platform,
   ScrollView,
   Text,
@@ -17,10 +18,12 @@ import AuthHeader from "@/components/auth/AuthHeader";
 import AlertBanner from "@/components/ui/AlertBanner";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import { useKeyboard } from "@/hooks/useKeyboard";
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
   const { signIn, errors, fetchStatus } = useSignIn();
+  const { isKeyboardVisible, keyboardHeight } = useKeyboard();
 
   // Screen flow state: "request" (email) | "verify" (code & new password)
   const [step, setStep] = useState<"request" | "verify">("request");
@@ -209,23 +212,33 @@ export default function ForgotPasswordScreen() {
         resizeMode="cover"
         className="flex-1"
       >
-        <View className="flex-1 bg-surface-base/85">
-          <ScrollView
-            contentContainerClassName="flex-grow justify-between"
-            showsVerticalScrollIndicator={false}
-          >
-            {/* Top Navigation / Brand Header */}
-            <AuthHeader
-              badgeLabel="Recovery Node"
-              badgeDotColor="bg-status-success"
-              badgeIcon="security"
-            />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          className="flex-1"
+        >
+          <View className="flex-1 bg-surface-base/85">
+            <ScrollView
+              contentContainerStyle={{
+                flexGrow: 1,
+                justifyContent: "space-between",
+                paddingBottom: Platform.OS === "ios" ? 40 : (isKeyboardVisible ? keyboardHeight + 60 : 40),
+              }}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="on-drag"
+            >
+              {/* Top Navigation / Brand Header */}
+              <AuthHeader
+                badgeLabel="Recovery Node"
+                badgeDotColor="bg-status-success"
+                badgeIcon="security"
+              />
 
-            {/* Main Content Area */}
-            <View className="w-full max-w-7xl mx-auto px-6 py-8 flex-1 justify-center">
-              <View className="flex-col lg:flex-row gap-10 items-center justify-between">
-                {/* Left Column: Security Protocols & Enterprise Information */}
-                <View className="w-full lg:w-7/12 gap-6">
+              {/* Main Content Area */}
+              <View className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 justify-center items-center lg:items-stretch">
+                <View className="flex-col lg:flex-row gap-10 items-center justify-between">
+                  {/* Left Column: Security Protocols & Enterprise Information */}
+                  <View className="hidden lg:flex w-full lg:w-7/12 gap-6">
                   <View className="gap-2">
                     <View className="flex-row items-center gap-2 mb-1">
                       <View className="px-2.5 py-1 rounded bg-secondary-container/40 border border-secondary/30">
@@ -506,7 +519,8 @@ export default function ForgotPasswordScreen() {
             />
           </ScrollView>
         </View>
-      </ImageBackground>
+      </KeyboardAvoidingView>
+    </ImageBackground>
     </SafeAreaView>
   );
 }

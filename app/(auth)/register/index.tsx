@@ -6,6 +6,8 @@ import {
   ActivityIndicator,
   Image,
   ImageBackground,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   Text,
   TextInput,
@@ -22,6 +24,7 @@ import AuthHeader from "../../../components/auth/AuthHeader";
 import SocialAuthButton from "../../../components/auth/SocialAuthButton";
 import tendoApi from "../../../services/api";
 import useAuthStore from "../../../stores/useAuthStore";
+import { useKeyboard } from "../../../hooks/useKeyboard";
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -29,6 +32,7 @@ export default function RegisterScreen() {
   const { startSSOFlow } = useSSO();
   const clerk = useClerk();
   const { setUser } = useAuthStore();
+  const { isKeyboardVisible, keyboardHeight } = useKeyboard();
 
   // Local state
   const [name, setName] = useState<string>("");
@@ -255,19 +259,29 @@ export default function RegisterScreen() {
         resizeMode="cover"
         className="flex-1"
       >
-        <View className="flex-1 bg-surface-base/85">
-          <ScrollView
-            contentContainerClassName="flex-grow justify-between"
-            showsVerticalScrollIndicator={false}
-          >
-            {/* Top Header */}
-            <AuthHeader />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          className="flex-1"
+        >
+          <View className="flex-1 bg-surface-base/85">
+            <ScrollView
+              contentContainerStyle={{
+                flexGrow: 1,
+                justifyContent: "space-between",
+                paddingBottom: Platform.OS === "ios" ? 40 : (isKeyboardVisible ? keyboardHeight + 60 : 40),
+              }}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="on-drag"
+            >
+              {/* Top Header */}
+              <AuthHeader />
 
-            {/* Main Content (Responsive 2 Columns on desktop, stacked on mobile) */}
-            <View className="w-full max-w-7xl mx-auto px-6 py-8 flex-1 justify-center">
-              <View className="flex-col lg:flex-row gap-10 items-center justify-between">
-                {/* Left Column: Enterprise Onboarding & Value Showcase */}
-                <View className="w-full lg:w-7/12 gap-6">
+              {/* Main Content (Responsive 2 Columns on desktop, stacked on mobile) */}
+              <View className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 justify-center items-center lg:items-stretch">
+                <View className="flex-col lg:flex-row gap-10 items-center justify-between">
+                  {/* Left Column: Enterprise Onboarding & Value Showcase */}
+                  <View className="hidden lg:flex w-full lg:w-7/12 gap-6">
                   {/* Status Pill */}
                   <View className="flex-row items-center gap-2 bg-surface-container-high px-4 py-1.5 rounded-full self-start border border-surface-container-highest/60">
                     <View className="w-2 h-2 rounded-full bg-primary" />
@@ -580,7 +594,8 @@ export default function RegisterScreen() {
             <AuthFooter />
           </ScrollView>
         </View>
-      </ImageBackground>
+      </KeyboardAvoidingView>
+    </ImageBackground>
     </SafeAreaView>
   );
 }

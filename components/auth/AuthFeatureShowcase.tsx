@@ -29,7 +29,7 @@ export default function AuthFeatureShowcase({
   certifications = defaultCertifications,
 }: AuthFeatureShowcaseProps) {
   return (
-    <View className="w-full lg:w-7/12 gap-6">
+    <View className="hidden lg:flex w-full lg:w-7/12 gap-6">
       {/* Hero Title */}
       <View className="gap-2">
         <Text className="text-3xl lg:text-4xl font-extrabold text-on-surface tracking-tight">
