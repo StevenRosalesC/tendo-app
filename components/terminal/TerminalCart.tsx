@@ -231,61 +231,71 @@ export default function TerminalCart({
         {/* Items List / Empty State */}
         <View className="flex-1 my-2.5 min-h-0">
           {items.length === 0 ? (
-            <View className="flex-1 items-center justify-center p-6 gap-3 my-auto">
-              <View className="w-16 h-16 rounded-2xl bg-surface-container-high border border-surface-container-highest/60 items-center justify-center shadow-xs">
-                <MaterialIcons
-                  name="shopping-bag"
-                  size={32}
-                  color="#c7c4d7"
-                />
-              </View>
-              <Text className="text-base font-bold text-on-surface text-center">
-                {isDesktop ? "El ticket está vacío" : "El carrito está vacío"}
-              </Text>
-              <Text className="text-xs text-on-surface-variant max-w-xs text-center leading-relaxed">
-                {isDesktop
-                  ? "Haz clic en los productos del catálogo a tu izquierda o escanea un código de barras (F3) para agregar artículos."
-                  : "Escanea artículos con el lector de código de barras, cámara o selecciónalos manualmente."}
-              </Text>
+            <ScrollView
+              className="flex-1"
+              contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="on-drag"
+            >
+              <View className="items-center justify-center p-4 sm:p-6 gap-3 my-auto">
+                <View className="w-16 h-16 rounded-2xl bg-surface-container-high border border-surface-container-highest/60 items-center justify-center shadow-xs">
+                  <MaterialIcons
+                    name="shopping-bag"
+                    size={32}
+                    color="#c7c4d7"
+                  />
+                </View>
+                <Text className="text-base font-bold text-on-surface text-center">
+                  {isDesktop ? "El ticket está vacío" : "El carrito está vacío"}
+                </Text>
+                <Text className="text-xs text-on-surface-variant max-w-xs text-center leading-relaxed">
+                  {isDesktop
+                    ? "Haz clic en los productos del catálogo a tu izquierda o escanea un código de barras (F3) para agregar artículos."
+                    : "Escanea artículos con el lector de código de barras, cámara o selecciónalos manualmente."}
+                </Text>
 
-              <View className="flex-row items-center gap-2 mt-2 flex-wrap justify-center">
-                {!isDesktop && (
+                <View className="flex-row items-center gap-2 mt-2 flex-wrap justify-center">
+                  {!isDesktop && (
+                    <TouchableOpacity
+                      onPress={() => setIsSelectModalOpen(true)}
+                      activeOpacity={0.7}
+                      className="px-4 py-2 rounded-xl bg-surface-container-high border border-surface-container-highest/60 flex-row items-center gap-1.5"
+                    >
+                      <MaterialIcons
+                        name="search"
+                        size={16}
+                        color="#c0c1ff"
+                      />
+                      <Text className="text-xs font-bold text-primary">
+                        Seleccionar Producto
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+
                   <TouchableOpacity
-                    onPress={() => setIsSelectModalOpen(true)}
+                    onPress={() => setIsScannerOpen(true)}
                     activeOpacity={0.7}
-                    className="px-4 py-2 rounded-xl bg-surface-container-high border border-surface-container-highest/60 flex-row items-center gap-1.5"
+                    className="px-4 py-2 rounded-xl bg-primary-container flex-row items-center gap-1.5"
                   >
                     <MaterialIcons
-                      name="search"
+                      name="qr-code-scanner"
                       size={16}
-                      color="#c0c1ff"
+                      color="#0d0096"
                     />
-                    <Text className="text-xs font-bold text-primary">
-                      Seleccionar Producto
+                    <Text className="text-xs font-bold text-on-primary-container">
+                      Abrir Escáner
                     </Text>
                   </TouchableOpacity>
-                )}
-
-                <TouchableOpacity
-                  onPress={() => setIsScannerOpen(true)}
-                  activeOpacity={0.7}
-                  className="px-4 py-2 rounded-xl bg-primary-container flex-row items-center gap-1.5"
-                >
-                  <MaterialIcons
-                    name="qr-code-scanner"
-                    size={16}
-                    color="#0d0096"
-                  />
-                  <Text className="text-xs font-bold text-on-primary-container">
-                    Abrir Escáner
-                  </Text>
-                </TouchableOpacity>
+                </View>
               </View>
-            </View>
+            </ScrollView>
           ) : (
             <ScrollView
               className="flex-1"
               showsVerticalScrollIndicator={true}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="on-drag"
               contentContainerClassName="gap-2.5 py-1"
             >
               {items.map((item) => (

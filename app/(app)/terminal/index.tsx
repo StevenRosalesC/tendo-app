@@ -31,10 +31,10 @@ export default function TerminalScreen() {
     );
   }
 
-  // Mobile View: Original compact single-cart view
+  // Mobile View: Compact single-cart view with flexible full-height layout
   return (
-    <View className="flex-1 bg-surface p-3 sm:p-5 items-center justify-center">
-      <View className="w-full max-w-2xl flex-1 flex-col">
+    <View className="flex-1 bg-surface p-2 sm:p-4">
+      <View className="w-full max-w-2xl flex-1 flex-col mx-auto">
         <TerminalCart isDesktop={false} />
       </View>
     </View>
